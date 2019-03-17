@@ -6,21 +6,36 @@ import os
 output_directory = "./output"
 soundfont_path = "./soundfonts/timbres-of-heaven.sf2"
 
+class Part:
+    def __init__(self, name='', midi='', filepath=''):
+        self.name = name
+        self.midi = midi
+        self.filepath = filepath
+
 def track_names(midi_data):
   return list(map(lambda track: track.name, midi_dat.tracks))
 
-def isolate_tracks(midi_data, track_numbers, output_filename):
-  new_file = mido.MidiFile()
+def instrument_number_for_part(part):
+    # based off http://www3.cpdl.org/wiki/index.php/User:Robert_Urmann
+    mapping = {
+            "soprano": 76, # pan flute
+            "alt": 75, # recorder
+            "tenor": 49, # string ensemble 1
+            "bass": 50 # string ensemble 2
+            }
+    return mapping[part]
+
+def generate_solo_parts(midi_data, track_numbers, part_name):
+  midi = mido.MidiFile()
 
   for track_number in track_numbers:
-    new_file.tracks.append(midi_data.tracks[track_number])
+    midi.tracks.append(midi_data.tracks[track_number])
 
-  # TODO: update language to say "part"
-  change_instrument(new_file, instrument_number_for_part(output_filename))
-  new_file_path = "{}/{}.midi".format(output_directory, output_filename)
-  new_file.save(new_file_path)
+  change_instrument(midi, instrument_number_for_part(part_name))
+  new_file_path = "{}/{}.midi".format(output_directory, part_name)
+  midi.save(new_file_path)
 
-  return new_file_path
+  return Part(name=part_name, midi=midi, filepath=new_file_path)
 
 def convert_midi_to_mp3(midifile_path):
   output_base_filename = os.path.splitext(midifile_path)[0]
@@ -35,9 +50,33 @@ def change_instrument(midi_data, program_number):
       if message.type == 'program_change':
         message.program = program_number
 
+def generate_accompaniment(part, solo_parts):
+  new_file = mido.MidiFile()
+
+  for other_part in solo_parts:
+      if other_part.name != part.name:
+          for track in other_part.midi.tracks:
+              new_file.tracks.append(track)
+
+  new_file_path = "{}/{}-accompaniment.midi".format(output_directory, part.name)
+  new_file.save(new_file_path)
+
+  return new_file_path
+
 def separate_tracks_into_mp3s(midi_data, description):
-  for track_name, track_numbers in description.items():
-    convert_midi_to_mp3(isolate_tracks(midi_data, track_numbers, track_name))
+  solo_parts = []
+  midis_to_convert = []
+
+  for part_name, track_numbers in description.items():
+      solo_part = generate_solo_parts(midi_data, track_numbers, part_name)
+      solo_parts.append(solo_part)
+      midis_to_convert.append(solo_part.filepath)
+
+  for part in solo_parts:
+      midis_to_convert.append(generate_accompaniment(part, solo_parts))
+
+  for midi in midis_to_convert:
+      convert_midi_to_mp3(midi)
 
 def cleanup():
   remove_temporary_midifiles()
@@ -46,15 +85,6 @@ def remove_temporary_midifiles():
     for midi_file in os.listdir(output_directory):
         if midi_file.endswith('.midi'):
              os.unlink(os.path.join(output_directory, midi_file))
-
-def instrument_number_for_part(part):
-# based off http://www3.cpdl.org/wiki/index.php/User:Robert_Urmann
-    return {
-            "soprano": 76, # pan flute
-            "alt": 75, # recorder
-            "tenor": 49, # string ensemble 1
-            "bass": 50 # string ensemble 2
-            }[part]
 
 midifile_path = sys.argv[1]
 
