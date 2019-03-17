@@ -3,7 +3,8 @@ import mido
 import sys
 import os
 
-output_directory = "./output/"
+output_directory = "./output"
+soundfont_path = "./soundfonts/timbres-of-heaven.sf2"
 
 def track_names(midi_data):
   return list(map(lambda track: track.name, midi_dat.tracks))
@@ -14,17 +15,22 @@ def isolate_tracks(midi_data, track_numbers, output_filename):
   for track_number in track_numbers:
     new_file.tracks.append(midi_data.tracks[track_number])
 
+  # TODO: update language to say "part"
+  change_instrument(new_file, instrument_number_for_part(output_filename))
   new_file_path = "{}/{}.midi".format(output_directory, output_filename)
   new_file.save(new_file_path)
 
   return new_file_path
 
 def convert_midi_to_mp3(midifile_path):
-  file_name_without_extension = os.path.splitext(midifile_path)[0]
+  output_base_filename = os.path.splitext(midifile_path)[0]
+  temp_wav_file_path = "./temp.wav"
   # TODO: Hide output unless debug option on... probably need subprocess.run
-  os.system("timidity {} -Ow -o - | lame - {}.mp3".format(
-    midifile_path, file_name_without_extension)
-  )
+  os.system("fluidsynth -F {} {} {}".format(
+    temp_wav_file_path, soundfont_path, midifile_path
+  ))
+  os.system("lame {} {}.mp3".format(temp_wav_file_path, output_base_filename))
+  os.unlink(temp_wav_file_path)
 
 def change_instrument(midi_data, program_number):
   for track in midi_data.tracks:
@@ -44,6 +50,15 @@ def remove_temporary_midifiles():
         if midi_file.endswith('.midi'):
              os.unlink(os.path.join(output_directory, midi_file))
 
+def instrument_number_for_part(part):
+# based off http://www3.cpdl.org/wiki/index.php/User:Robert_Urmann
+    return {
+            "soprano": 76, # pan flute
+            "alt": 75, # recorder
+            "tenor": 49, # string ensemble 1
+            "bass": 50 # string ensemble 2
+            }[part]
+
 midifile_path = sys.argv[1]
 
 # TODO: Document this and make optional
@@ -56,6 +71,5 @@ description = {
 
 midi_data = mido.MidiFile(midifile_path)
 
-change_instrument(midi_data, 0)
 separate_tracks_into_mp3s(midi_data, description)
 remove_temporary_midifiles()

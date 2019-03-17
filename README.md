@@ -15,6 +15,6 @@ This program splits takes a midi file that contains every part of a choral work 
 
 # Usage
 
-`$ midi-to-part-mp3s /Downloads/my-midi.mid`
+`$ ./midi-to-part-mp3s /Downloads/my-midi.mid`
 
 The files will appear in the folder `$ ./output`
