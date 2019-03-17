@@ -24,13 +24,10 @@ def isolate_tracks(midi_data, track_numbers, output_filename):
 
 def convert_midi_to_mp3(midifile_path):
   output_base_filename = os.path.splitext(midifile_path)[0]
-  temp_wav_file_path = "./temp.wav"
   # TODO: Hide output unless debug option on... probably need subprocess.run
-  os.system("fluidsynth -F {} {} {}".format(
-    temp_wav_file_path, soundfont_path, midifile_path
+  os.system("fluidsynth -r 44100 -R 1 -E little -T raw -F - -O s16 {} {} | lame --signed -s 44100 -r - {}.mp3".format(
+    soundfont_path, midifile_path, output_base_filename
   ))
-  os.system("lame {} {}.mp3".format(temp_wav_file_path, output_base_filename))
-  os.unlink(temp_wav_file_path)
 
 def change_instrument(midi_data, program_number):
   for track in midi_data.tracks:
