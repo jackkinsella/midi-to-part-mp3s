@@ -1,16 +1,22 @@
 #!/usr/bin/env python3
-import mido
 import sys
 import os
+
+import sox
+import mido
 
 output_directory = "./output"
 soundfont_path = "./soundfonts/timbres-of-heaven.sf2"
 
 class Part:
-    def __init__(self, name='', midi='', filepath=''):
+    def __init__(self, name='', midi='', midi_filepath=''):
         self.name = name
         self.midi = midi
-        self.filepath = filepath
+        self.midi_filepath = midi_filepath
+        self.mp3 = convert_midi_to_mp3(midi_filepath)
+
+    def mp3_filepath(self):
+        return self.midi_filepath.replace(".midi", ".mp3")
 
 def track_names(midi_data):
   return list(map(lambda track: track.name, midi_dat.tracks))
@@ -35,7 +41,9 @@ def generate_solo_parts(midi_data, track_numbers, part_name):
   new_file_path = "{}/{}.midi".format(output_directory, part_name)
   midi.save(new_file_path)
 
-  return Part(name=part_name, midi=midi, filepath=new_file_path)
+  part = Part(name=part_name, midi=midi, midi_filepath=new_file_path)
+
+  return part
 
 def convert_midi_to_mp3(midifile_path):
   output_base_filename = os.path.splitext(midifile_path)[0]
@@ -54,29 +62,35 @@ def generate_accompaniment(part, solo_parts):
   new_file = mido.MidiFile()
 
   for other_part in solo_parts:
-      if other_part.name != part.name:
-          for track in other_part.midi.tracks:
-              new_file.tracks.append(track)
+      for track in other_part.midi.tracks:
+          if other_part.name != part.name:
+              print("should lower volumne")
+          new_file.tracks.append(track)
 
   new_file_path = "{}/{}-accompaniment.midi".format(output_directory, part.name)
   new_file.save(new_file_path)
 
   return new_file_path
 
+def generate_full_mp3(solo_parts):
+  combiner = sox.Combiner()
+
+  # docs https://pysox.readthedocs.io/en/latest/api.html
+  input_files = [part.mp3_filepath() for part in solo_parts]
+  output_file_path = "{}/alle.mp3".format(output_directory)
+  combiner.build(input_files, output_file_path, 'mix-power')
+
 def separate_tracks_into_mp3s(midi_data, description):
   solo_parts = []
-  midis_to_convert = []
 
   for part_name, track_numbers in description.items():
       solo_part = generate_solo_parts(midi_data, track_numbers, part_name)
       solo_parts.append(solo_part)
-      midis_to_convert.append(solo_part.filepath)
 
-  for part in solo_parts:
-      midis_to_convert.append(generate_accompaniment(part, solo_parts))
+  # for part in solo_parts:
+      # midis_to_convert.append(generate_accompaniment(part, solo_parts))
 
-  for midi in midis_to_convert:
-      convert_midi_to_mp3(midi)
+  generate_full_mp3(solo_parts)
 
 def cleanup():
   remove_temporary_midifiles()
@@ -99,4 +113,4 @@ description = {
 midi_data = mido.MidiFile(midifile_path)
 
 separate_tracks_into_mp3s(midi_data, description)
-remove_temporary_midifiles()
+cleanup()

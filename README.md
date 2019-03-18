@@ -8,9 +8,11 @@ This program splits takes a midi file that contains every part of a choral work 
 
 ## Dependencies
 * python3
-* [TiMidity++](https://wiki.archlinux.org/index.php/timidity) - MIDI-to-WAVE converter and player. Install on macos with `$ brew
+* [Fluidsynth](http://www.fluidsynth.org/) - MIDI-to-WAVE converter and player. Install on macos with `$ brew
     install timidity`
 * [Lame](http://lame.sourceforge.net/) - create mp3 files. Install on macos with `$ brew install lame`
+* [SoX](http://sox.sourceforge.net/) - mix audio files. Install on macos with `$brew install sox`. Also
+    require python interface, installed with `pip3 install sox`
 * [mido](https://mido.readthedocs.io/en/latest/)  - midi objects for python. Install with `pip3 install mido`
 
 # Usage
