@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-import sys
+import argparse
 import os
 
 import sox
@@ -59,18 +59,13 @@ def change_instrument(midi_data, program_number):
         message.program = program_number
 
 def generate_accompaniment(part, solo_parts):
-  new_file = mido.MidiFile()
+  combiner = sox.Combiner()
 
-  for other_part in solo_parts:
-      for track in other_part.midi.tracks:
-          if other_part.name != part.name:
-              print("should lower volumne")
-          new_file.tracks.append(track)
-
-  new_file_path = "{}/{}-accompaniment.midi".format(output_directory, part.name)
-  new_file.save(new_file_path)
-
-  return new_file_path
+  # docs https://pysox.readthedocs.io/en/latest/api.html
+  input_files = [part.mp3_filepath() for part in solo_parts]
+  input_volumes = [1 if channel == part.mp3_filepath() else 0.33 for channel in input_files]
+  output_file_path = "{}/{} mit Begleitung.mp3".format(output_directory, part.name)
+  combiner.build(input_files, output_file_path, 'mix-power', input_volumes)
 
 def generate_full_mp3(solo_parts):
   combiner = sox.Combiner()
@@ -80,17 +75,25 @@ def generate_full_mp3(solo_parts):
   output_file_path = "{}/alle.mp3".format(output_directory)
   combiner.build(input_files, output_file_path, 'mix-power')
 
-def separate_tracks_into_mp3s(midi_data, description):
+def separate_tracks_into_mp3s(args):
+  midifile_path = args.midifile_path
+  midi_data = mido.MidiFile(midifile_path)
   solo_parts = []
 
-  for part_name, track_numbers in description.items():
+  for part_name, track_numbers in solo_track_bundles(args).items():
       solo_part = generate_solo_parts(midi_data, track_numbers, part_name)
       solo_parts.append(solo_part)
 
-  # for part in solo_parts:
-      # midis_to_convert.append(generate_accompaniment(part, solo_parts))
+  for part in solo_parts:
+      generate_accompaniment(part, solo_parts)
 
   generate_full_mp3(solo_parts)
+
+def solo_track_bundles(args):
+  out = {}
+  for part_name in ['soprano', 'alt', 'bass', 'tenor']:
+      out[part_name] = [vars(args)[part_name]] + args.common_solo_tracks
+  return out
 
 def cleanup():
   remove_temporary_midifiles()
@@ -100,17 +103,19 @@ def remove_temporary_midifiles():
         if midi_file.endswith('.midi'):
              os.unlink(os.path.join(output_directory, midi_file))
 
-midifile_path = sys.argv[1]
+parser = argparse.ArgumentParser()
+parser.add_argument("-s", "--soprano", type=int, default=0)
+parser.add_argument("-a", "--alt", type=int, default=1)
+parser.add_argument("-t", "--tenor", type=int, default=2)
+parser.add_argument("-b", "--bass", type=int, default=3)
+parser.add_argument("-csts", "--common-solo-tracks", help='midi tracks that must appear \
+        in all solo mp3s e.g. because they contain time signature changes',
+        nargs='+', type=int, default=[])
+parser.add_argument("-cats", "--common-accompaniment-tracks", help='midi tracks that \
+        appear in all accompaniment mp3s e.g. piano or orchestra', nargs='+',
+        type=int, default=[])
+parser.add_argument("midifile_path")
+args = parser.parse_args()
 
-# TODO: Document this and make optional
-description = {
-  "soprano": [0,1],
-  "alt": [0,2],
-  "tenor": [0,3],
-  "bass": [0,4]
-}
-
-midi_data = mido.MidiFile(midifile_path)
-
-separate_tracks_into_mp3s(midi_data, description)
+separate_tracks_into_mp3s(args)
 cleanup()
