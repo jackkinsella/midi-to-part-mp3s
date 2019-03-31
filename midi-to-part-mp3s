@@ -61,13 +61,28 @@ def change_instrument(midi_data, program_number):
       if message.type == 'program_change':
         message.program = program_number
 
-def generate_accompaniment(part, solo_parts):
+# TODO: args is being passed too deep into the call-stack
+def generate_accompaniment(own_part, solo_parts, args):
   combiner = sox.Combiner()
 
-  # docs https://pysox.readthedocs.io/en/latest/api.html
-  input_files = [part.mp3_filepath() for part in solo_parts]
-  input_volumes = [1 if channel == part.mp3_filepath() else 0.33 for channel in input_files]
-  output_file_path = "{}/{} mit Begleitung.mp3".format(output_directory, part.name)
+  accompaniment_volume_ratio = 0.33
+  instrumental_volume_ratio = accompaniment_volume_ratio * args.instrumental_volume
+  input_volumes = []
+  input_files = []
+  for part in solo_parts:
+      is_own_part = part.name == own_part.name
+      is_instrumental = part.name == 'accompaniment'
+
+      input_files.append(part.mp3_filepath())
+
+      if is_own_part:
+          input_volumes.append(1)
+      elif is_instrumental:
+          input_volumes.append(instrumental_volume_ratio)
+      else:
+          input_volumes.append(accompaniment_volume_ratio)
+
+  output_file_path = "{}/{} mit Begleitung.mp3".format(output_directory, own_part.name)
   combiner.build(input_files, output_file_path, 'mix-power', input_volumes)
 
 def generate_full_mp3(solo_parts):
@@ -88,7 +103,7 @@ def separate_tracks_into_mp3s(args):
       solo_parts.append(solo_part)
 
   for part in solo_parts:
-      generate_accompaniment(part, solo_parts)
+      generate_accompaniment(part, solo_parts, args)
 
   generate_full_mp3(solo_parts)
 
@@ -118,6 +133,7 @@ parser.add_argument("-s", "--soprano", type=int, default=1)
 parser.add_argument("-a", "--alt", type=int, default=2)
 parser.add_argument("-t", "--tenor", type=int, default=3)
 parser.add_argument("-b", "--bass", type=int, default=4)
+parser.add_argument("-iv", "--instrumental-volume", help="configure instrumental volume", type=float, default=2.0)
 parser.add_argument("-i", "--instrumental-accompaniment", help='midi tracks that \
         appear in all accompaniment mp3s e.g. piano or orchestra', nargs='+',
         type=int, default=[])
