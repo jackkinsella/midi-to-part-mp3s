@@ -17,6 +17,17 @@ This program splits takes a midi file that contains every part of a choral work 
 
 # Usage
 
+**Gotcha:** There is often a midi track for time signatures placed at track 0. This must be included in all solo mp3s,
+otherwise you'll find that a 5 minute track might be over in 1 minute.
+
+By default, track 0 of the midi is set to time sig, and tracks 1-4 are set to SATB respectively. These defaults are used with:
+
 `$ ./midi-to-part-mp3s /Downloads/my-midi.mid`
 
-The files will appear in the folder `$ ./output`
+To customize which tracks are assigned to track, run the command using the
+options display with
+
+`$./midi-to-part-mp3s --help`
+
+The mp3 files will appear in the folder `$ ./output`
+

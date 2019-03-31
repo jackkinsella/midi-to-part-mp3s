@@ -7,6 +7,7 @@ import mido
 
 output_directory = "./output"
 soundfont_path = "./soundfonts/timbres-of-heaven.sf2"
+sung_parts = ['soprano', 'alt', 'bass', 'tenor']
 
 class Part:
     def __init__(self, name='', midi='', midi_filepath=''):
@@ -22,7 +23,7 @@ def track_names(midi_data):
   return list(map(lambda track: track.name, midi_dat.tracks))
 
 def instrument_number_for_part(part):
-    # based off http://www3.cpdl.org/wiki/index.php/User:Robert_Urmann
+    # instrument choices based off advice given here: http://www3.cpdl.org/wiki/index.php/User:Robert_Urmann
     mapping = {
             "soprano": 76, # pan flute
             "alt": 75, # recorder
@@ -37,7 +38,8 @@ def generate_solo_parts(midi_data, track_numbers, part_name):
   for track_number in track_numbers:
     midi.tracks.append(midi_data.tracks[track_number])
 
-  change_instrument(midi, instrument_number_for_part(part_name))
+  if part_name in sung_parts:
+      change_instrument(midi, instrument_number_for_part(part_name))
   new_file_path = "{}/{}.midi".format(output_directory, part_name)
   midi.save(new_file_path)
 
@@ -91,8 +93,12 @@ def separate_tracks_into_mp3s(args):
 
 def solo_track_bundles(args):
   out = {}
-  for part_name in ['soprano', 'alt', 'bass', 'tenor']:
+  for part_name in sung_parts:
       out[part_name] = [vars(args)[part_name]] + args.common_solo_tracks
+
+  if args.instrumental_accompaniment:
+      out['accompaniment'] = args.instrumental_accompaniment + args.common_solo_tracks
+
   return out
 
 def cleanup():
@@ -104,14 +110,14 @@ def remove_temporary_midifiles():
              os.unlink(os.path.join(output_directory, midi_file))
 
 parser = argparse.ArgumentParser()
-parser.add_argument("-s", "--soprano", type=int, default=0)
-parser.add_argument("-a", "--alt", type=int, default=1)
-parser.add_argument("-t", "--tenor", type=int, default=2)
-parser.add_argument("-b", "--bass", type=int, default=3)
 parser.add_argument("-csts", "--common-solo-tracks", help='midi tracks that must appear \
         in all solo mp3s e.g. because they contain time signature changes',
-        nargs='+', type=int, default=[])
-parser.add_argument("-cats", "--common-accompaniment-tracks", help='midi tracks that \
+        nargs='+', type=int, default=[0])
+parser.add_argument("-s", "--soprano", type=int, default=1)
+parser.add_argument("-a", "--alt", type=int, default=2)
+parser.add_argument("-t", "--tenor", type=int, default=3)
+parser.add_argument("-b", "--bass", type=int, default=4)
+parser.add_argument("-i", "--instrumental-accompaniment", help='midi tracks that \
         appear in all accompaniment mp3s e.g. piano or orchestra', nargs='+',
         type=int, default=[])
 parser.add_argument("midifile_path")
