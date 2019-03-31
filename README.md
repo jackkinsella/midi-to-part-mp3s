@@ -30,4 +30,3 @@ options display with
 `$./midi-to-part-mp3s --help`
 
 The mp3 files will appear in the folder `$ ./output`
-

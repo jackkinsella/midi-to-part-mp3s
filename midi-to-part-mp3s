@@ -34,6 +34,7 @@ def instrument_number_for_part(part):
 
 def generate_solo_parts(midi_data, track_numbers, part_name):
   midi = mido.MidiFile()
+  midi.ticks_per_beat = midi_data.ticks_per_beat
 
   for track_number in track_numbers:
     midi.tracks.append(midi_data.tracks[track_number])
