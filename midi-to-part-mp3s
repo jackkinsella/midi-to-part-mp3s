@@ -49,11 +49,38 @@ def instrument_number_for_part(part):
             }
     return mapping[part]
 
+def rescale_velocities(midi_data):
+    # full range is 0-127
+  min_allowed = 55
+  max_allowed = 70
+
+  seen_any_note_ons = False
+  for track in midi_data.tracks:
+      for message in track:
+          if message.type == 'note_on':
+              if not seen_any_note_ons:
+                  max_observed = message.velocity
+                  min_observed = message.velocity
+                  seen_any_note_ons = True
+              else:
+                  max_observed = max(message.velocity, max_observed)
+                  min_observed = min(message.velocity, min_observed)
+
+  # TODO: Merge these two iterators and the other message iterator elsewhere
+  for track in midi_data.tracks:
+      for message in track:
+          if message.type == 'note_on':
+              x = message.velocity
+              rescaled_velocity = int((max_allowed - min_allowed) * ((x -
+                  min_observed)/(max_observed - min_observed)) + min_allowed)
+              message.velocity = rescaled_velocity
+
 def show_midi_analysis():
   midifile_path = args.midifile_path
   midi_data = mido.MidiFile(midifile_path)
   track_count = len(midi_data.tracks)
   print(f"The file has {track_count} tracks")
+
 
 def generate_solo_parts(midi_data, track_numbers, part_name):
   midi = mido.MidiFile()
@@ -120,6 +147,8 @@ def separate_tracks_into_mp3s():
   midifile_path = args.midifile_path
   midi_data = mido.MidiFile(midifile_path)
   solo_parts = []
+
+  rescale_velocities(midi_data)
 
   for part_name, track_numbers in solo_track_bundles(args).items():
       solo_part = generate_solo_parts(midi_data, track_numbers, part_name)

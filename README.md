@@ -14,13 +14,13 @@ This program splits takes a midi file that contains every part of a choral work 
 * [SoX](http://sox.sourceforge.net/) - mix audio files. Install on macos with `$ brew install sox`. Also
     require python interface, installed with `$ pip3 install sox`
 * [mido](https://mido.readthedocs.io/en/latest/)  - midi objects for python. Install with `$ pip3 install mido`
-* A general soundfont. This must be placed within './soundfonts'. The program assumes you have [Timbres of Heaven](https://drive.google.com/uc?id=0B2NEzl-56UFHd054VnJETzJOZjg&export=download) downloaded to that folder and named `timbres-of-heaven.sf2`.
+* A general soundfont. This must be placed within './soundfonts'. The program assumes you have [Timbres of Heaven](https://drive.google.com/uc?id=0B2NEzl-56UFHd054VnJETzJOZjg&export=download) downloaded to that folder and named `timbres-of-heaven.sf2`. Note that
+ if you download an `.sfark` file, you can [go here to convert it](https://cloudconvert.com/sfark-to-sf2) to ".sf2"
 
 # Usage
 
 **Gotcha:** There is often a midi track for time signatures placed at track 0. This must be included in all solo mp3s,
 otherwise you'll find that a 5 minute track might be over in 1 minute.
-
 ## Quick start
 
 By default, track 0 of the midi is set to time signatures, and tracks 1-4 are set to SATB respectively. These defaults are used with:
