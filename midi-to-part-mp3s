@@ -6,8 +6,25 @@ import sox
 import mido
 
 output_directory = "./output"
-soundfont_path = "./soundfonts/timbres-of-heaven.sf2"
 sung_parts = ['soprano', 'alt', 'bass', 'tenor']
+
+parser = argparse.ArgumentParser()
+parser.add_argument("-no-csts", dest="no_common_tracks", help='file contains no common \
+tracks', default=False, action='store_true')
+parser.add_argument("-csts", "--common-solo-tracks", help='midi tracks that must appear \
+        in all solo mp3s e.g. because they contain time signature changes',
+        nargs='+', type=int, default=[0])
+parser.add_argument("-s", "--soprano", type=int, default=1)
+parser.add_argument("-a", "--alt", type=int, default=2)
+parser.add_argument("-t", "--tenor", type=int, default=3)
+parser.add_argument("-b", "--bass", type=int, default=4)
+parser.add_argument("-iv", "--instrumental-volume", help="configure instrumental volume", type=float, default=2.0)
+parser.add_argument("-i", "--instrumental-accompaniment", help='midi tracks that \
+        appear in all accompaniment mp3s e.g. piano or orchestra', nargs='+',
+        type=int, default=[])
+parser.add_argument("-sf", "--soundfont_path", help='the full path to your soundfont', default="./soundfonts/timbres-of-heaven.sf2")
+parser.add_argument("midifile_path")
+args = parser.parse_args()
 
 class Part:
     def __init__(self, name='', midi='', midi_filepath=''):
@@ -32,6 +49,12 @@ def instrument_number_for_part(part):
             }
     return mapping[part]
 
+def show_midi_analysis():
+  midifile_path = args.midifile_path
+  midi_data = mido.MidiFile(midifile_path)
+  track_count = len(midi_data.tracks)
+  print(f"The file has {track_count} tracks")
+
 def generate_solo_parts(midi_data, track_numbers, part_name):
   midi = mido.MidiFile()
   midi.ticks_per_beat = midi_data.ticks_per_beat
@@ -52,7 +75,7 @@ def convert_midi_to_mp3(midifile_path):
   output_base_filename = os.path.splitext(midifile_path)[0]
   # TODO: Hide output unless debug option on... probably need subprocess.run
   os.system("fluidsynth -r 44100 -R 1 -E little -T raw -F - -O s16 {} {} | lame --signed -s 44100 -r - {}.mp3".format(
-    soundfont_path, midifile_path, output_base_filename
+    args.soundfont_path, midifile_path, output_base_filename
   ))
 
 def change_instrument(midi_data, program_number):
@@ -93,7 +116,7 @@ def generate_full_mp3(solo_parts):
   output_file_path = "{}/alle.mp3".format(output_directory)
   combiner.build(input_files, output_file_path, 'mix-power')
 
-def separate_tracks_into_mp3s(args):
+def separate_tracks_into_mp3s():
   midifile_path = args.midifile_path
   midi_data = mido.MidiFile(midifile_path)
   solo_parts = []
@@ -107,13 +130,23 @@ def separate_tracks_into_mp3s(args):
 
   generate_full_mp3(solo_parts)
 
+def common_solo_tracks():
+    if args.no_common_tracks:
+        return []
+    else:
+        return args.common_solo_tracks
+
 def solo_track_bundles(args):
   out = {}
   for part_name in sung_parts:
-      out[part_name] = [vars(args)[part_name]] + args.common_solo_tracks
+      track_number = vars(args)[part_name]
+      if args.no_common_tracks:
+          track_number = track_number -1
+
+      out[part_name] = [track_number] + common_solo_tracks()
 
   if args.instrumental_accompaniment:
-      out['accompaniment'] = args.instrumental_accompaniment + args.common_solo_tracks
+      out['accompaniment'] = args.instrumental_accompaniment + common_solo_tracks()
 
   return out
 
@@ -125,20 +158,6 @@ def remove_temporary_midifiles():
         if midi_file.endswith('.midi'):
              os.unlink(os.path.join(output_directory, midi_file))
 
-parser = argparse.ArgumentParser()
-parser.add_argument("-csts", "--common-solo-tracks", help='midi tracks that must appear \
-        in all solo mp3s e.g. because they contain time signature changes',
-        nargs='+', type=int, default=[0])
-parser.add_argument("-s", "--soprano", type=int, default=1)
-parser.add_argument("-a", "--alt", type=int, default=2)
-parser.add_argument("-t", "--tenor", type=int, default=3)
-parser.add_argument("-b", "--bass", type=int, default=4)
-parser.add_argument("-iv", "--instrumental-volume", help="configure instrumental volume", type=float, default=2.0)
-parser.add_argument("-i", "--instrumental-accompaniment", help='midi tracks that \
-        appear in all accompaniment mp3s e.g. piano or orchestra', nargs='+',
-        type=int, default=[])
-parser.add_argument("midifile_path")
-args = parser.parse_args()
-
-separate_tracks_into_mp3s(args)
+show_midi_analysis()
+separate_tracks_into_mp3s()
 cleanup()
