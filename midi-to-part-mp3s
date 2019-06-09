@@ -20,9 +20,17 @@ class Part:
         return self.midi_filepath.replace(".midi", ".mp3")
 
 def track_names(midi_data):
-  return list(map(lambda track: track.name, midi_dat.tracks))
+  return list(map(lambda track: track.name, midi_data.tracks))
 
 def instrument_number_for_part(part):
+  if (args.instrument):
+     mapping = {
+            "soprano": args.instrument,
+            "alt": args.instrument,
+            "tenor": args.instrument,
+            "bass": args.instrument
+            }
+  else:
     # instrument choices based off advice given here: http://www3.cpdl.org/wiki/index.php/User:Robert_Urmann
     mapping = {
             "soprano": 76, # pan flute
@@ -30,7 +38,7 @@ def instrument_number_for_part(part):
             "tenor": 49, # string ensemble 1
             "bass": 50 # string ensemble 2
             }
-    return mapping[part]
+  return mapping[part]
 
 def generate_solo_parts(midi_data, track_numbers, part_name):
   midi = mido.MidiFile()
@@ -40,7 +48,8 @@ def generate_solo_parts(midi_data, track_numbers, part_name):
     midi.tracks.append(midi_data.tracks[track_number])
 
   if part_name in sung_parts:
-      change_instrument(midi, instrument_number_for_part(part_name))
+    instrument_number = instrument_number_for_part(part_name)
+    change_instrument(midi, instrument_number)
   new_file_path = "{}/{}.midi".format(output_directory, part_name)
   midi.save(new_file_path)
 
@@ -110,7 +119,10 @@ def separate_tracks_into_mp3s(args):
 def solo_track_bundles(args):
   out = {}
   for part_name in sung_parts:
+    if(args.common_solo_tracks):
       out[part_name] = [vars(args)[part_name]] + args.common_solo_tracks
+    else:
+      out[part_name] = [vars(args)[part_name]]
 
   if args.instrumental_accompaniment:
       out['accompaniment'] = args.instrumental_accompaniment + args.common_solo_tracks
@@ -128,11 +140,13 @@ def remove_temporary_midifiles():
 parser = argparse.ArgumentParser()
 parser.add_argument("-csts", "--common-solo-tracks", help='midi tracks that must appear \
         in all solo mp3s e.g. because they contain time signature changes',
-        nargs='+', type=int, default=[0])
+        nargs='+', type=int)
 parser.add_argument("-s", "--soprano", type=int, default=1)
 parser.add_argument("-a", "--alt", type=int, default=2)
 parser.add_argument("-t", "--tenor", type=int, default=3)
 parser.add_argument("-b", "--bass", type=int, default=4)
+parser.add_argument("-in", "--instrument", type=int, help='instrument that should be used for all \
+  voices instead of the advice given at cpdl.org')
 parser.add_argument("-iv", "--instrumental-volume", help="configure instrumental volume", type=float, default=2.0)
 parser.add_argument("-i", "--instrumental-accompaniment", help='midi tracks that \
         appear in all accompaniment mp3s e.g. piano or orchestra', nargs='+',
