@@ -10,12 +10,19 @@ soundfont_path = "./soundfonts/timbres-of-heaven.sf2"
 sung_parts = ['soprano', 'alt', 'bass', 'tenor']
 
 class Part:
+  # instrument choices based off advice given here: http://www3.cpdl.org/wiki/index.php/User:Robert_Urmann
+    MAPPING = {
+      "soprano": 76, # pan flute
+      "alt": 75, # recorder
+      "tenor": 49, # string ensemble 1
+      "bass": 50 # string ensemble 2
+    }
+
     def __init__(self, name='', midi='', midi_filepath=''):
         self.name = name
         self.midi = midi
         self.midi_filepath = midi_filepath
         self.mp3 = convert_midi_to_mp3(midi_filepath)
-
     def mp3_filepath(self):
         return self.midi_filepath.replace(".midi", ".mp3")
 
@@ -23,22 +30,11 @@ def track_names(midi_data):
   return list(map(lambda track: track.name, midi_data.tracks))
 
 def instrument_number_for_part(part):
+  # Override instrument based on the instrument argument
   if (args.instrument):
-     mapping = {
-            "soprano": args.instrument,
-            "alt": args.instrument,
-            "tenor": args.instrument,
-            "bass": args.instrument
-            }
+    return args.instrument
   else:
-    # instrument choices based off advice given here: http://www3.cpdl.org/wiki/index.php/User:Robert_Urmann
-    mapping = {
-            "soprano": 76, # pan flute
-            "alt": 75, # recorder
-            "tenor": 49, # string ensemble 1
-            "bass": 50 # string ensemble 2
-            }
-  return mapping[part]
+    return Part.MAPPING[part]
 
 def generate_solo_parts(midi_data, track_numbers, part_name):
   midi = mido.MidiFile()
