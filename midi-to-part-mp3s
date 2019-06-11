@@ -8,15 +8,15 @@ import mido
 output_directory = "./output"
 soundfont_path = "./soundfonts/timbres-of-heaven.sf2"
 sung_parts = ['soprano', 'alt', 'bass', 'tenor']
+ # instrument choices based off advice given here: http://www3.cpdl.org/wiki/index.php/User:Robert_Urmann
+MAPPING = {
+  "soprano": 76, # pan flute
+  "alt": 75, # recorder
+  "tenor": 49, # string ensemble 1
+  "bass": 50 # string ensemble 2
+}
 
 class Part:
-  # instrument choices based off advice given here: http://www3.cpdl.org/wiki/index.php/User:Robert_Urmann
-    MAPPING = {
-      "soprano": 76, # pan flute
-      "alt": 75, # recorder
-      "tenor": 49, # string ensemble 1
-      "bass": 50 # string ensemble 2
-    }
 
     def __init__(self, name='', midi='', midi_filepath=''):
         self.name = name
@@ -34,7 +34,7 @@ def instrument_number_for_part(part):
   if (args.instrument):
     return args.instrument
   else:
-    return Part.MAPPING[part]
+    return MAPPING[part]
 
 def generate_solo_parts(midi_data, track_numbers, part_name):
   midi = mido.MidiFile()
