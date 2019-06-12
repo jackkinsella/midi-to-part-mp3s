@@ -1,2 +1,4 @@
+.vscode/
+mtp_venv/
 output/
 soundfonts/*.sf2
