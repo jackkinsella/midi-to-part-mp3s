@@ -4,6 +4,7 @@ import os
 
 import sox
 import mido
+import music21
 
 output_directory = "./output"
 soundfont_path = "./soundfonts/timbres-of-heaven.sf2"
@@ -25,6 +26,34 @@ class Part:
         self.mp3 = convert_midi_to_mp3(midi_filepath)
     def mp3_filepath(self):
         return self.midi_filepath.replace(".midi", ".mp3")
+
+def check_format(file_path: str) -> str:
+  """If the format is midi, proceed. If the format is MusicXML, convert to midi.
+  
+  Arguments:
+      file_path {[str]} -- path of the file to convert
+  
+  Raises:
+      NameError: Raised if trying to convert a format not supported by the script
+  
+  Returns:
+      str -- midi file name (original or converted midi file)
+  """
+  if file_path.endswith('.mid') or file_path.endswith('.midi'):
+    return file_path
+  elif file_path.endswith('.mxl'):
+    converted_file_path = output_directory + '/temp.midi'
+    c: music21.converter = music21.converter.Converter()
+    score: music21.stream.Score = music21.converter.parse(file_path)
+    midi_file = music21.midi.translate.streamToMidiFile(score)
+    midi_file.open(converted_file_path, 'wb')
+    midi_file.write()
+    midi_file.close()
+    return converted_file_path
+  else:
+    raise NameError('The application currently only supports midi or MusicXML format')
+
+
 
 def track_names(midi_data):
   return list(map(lambda track: track.name, midi_data.tracks))
@@ -98,8 +127,7 @@ def generate_full_mp3(solo_parts):
   output_file_path = "{}/alle.mp3".format(output_directory)
   combiner.build(input_files, output_file_path, 'mix-power')
 
-def separate_tracks_into_mp3s(args):
-  midifile_path = args.midifile_path
+def separate_tracks_into_mp3s(args, midifile_path):
   midi_data = mido.MidiFile(midifile_path)
   solo_parts = []
 
@@ -147,8 +175,9 @@ parser.add_argument("-iv", "--instrumental-volume", help="configure instrumental
 parser.add_argument("-i", "--instrumental-accompaniment", help='midi tracks that \
         appear in all accompaniment mp3s e.g. piano or orchestra', nargs='+',
         type=int, default=[])
-parser.add_argument("midifile_path")
+parser.add_argument("file_path")
 args = parser.parse_args()
 
-separate_tracks_into_mp3s(args)
+midi_file_path = check_format(args.file_path)
+separate_tracks_into_mp3s(args, midi_file_path)
 cleanup()
