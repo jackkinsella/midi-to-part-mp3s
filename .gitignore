@@ -1,4 +1,10 @@
-.vscode/
-mtp_venv/
+# Project
 output/
 soundfonts/*.sf2
+
+# Editors, support code
+.vscode/
+.mypy_cache
+
+# Python virtual environments
+mtp_venv/
