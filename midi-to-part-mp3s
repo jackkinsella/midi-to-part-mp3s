@@ -4,85 +4,96 @@ import os
 
 import sox
 import mido
+import music21
+
+from typing import List, Dict
 
 output_directory = "./output"
+soundfont_path = "./soundfonts/timbres-of-heaven.sf2"
 sung_parts = ['soprano', 'alt', 'bass', 'tenor']
-
-parser = argparse.ArgumentParser()
-parser.add_argument("-no-csts", dest="no_common_tracks", help='file contains no common \
-tracks', default=False, action='store_true')
-parser.add_argument("-csts", "--common-solo-tracks", help='midi tracks that must appear \
-        in all solo mp3s e.g. because they contain time signature changes',
-        nargs='+', type=int, default=[0])
-parser.add_argument("-s", "--soprano", type=int, default=1)
-parser.add_argument("-a", "--alt", type=int, default=2)
-parser.add_argument("-t", "--tenor", type=int, default=3)
-parser.add_argument("-b", "--bass", type=int, default=4)
-parser.add_argument("-iv", "--instrumental-volume", help="configure instrumental volume", type=float, default=2.0)
-parser.add_argument("-i", "--instrumental-accompaniment", help='midi tracks that \
-        appear in all accompaniment mp3s e.g. piano or orchestra', nargs='+',
-        type=int, default=[])
-parser.add_argument("-sf", "--soundfont_path", help='the full path to your soundfont', default="./soundfonts/timbres-of-heaven.sf2")
-parser.add_argument("midifile_path")
-args = parser.parse_args()
+ # instrument choices based off advice given here: http://www3.cpdl.org/wiki/index.php/User:Robert_Urmann
+MAPPING = {
+  "soprano": 76, # pan flute
+  "alt": 75, # recorder
+  "tenor": 49, # string ensemble 1
+  "bass": 50 # string ensemble 2
+}
 
 class Part:
-    def __init__(self, name='', midi='', midi_filepath=''):
+    def __init__(self, name: str='', midi: str='', midi_filepath: str=''):
         self.name = name
         self.midi = midi
         self.midi_filepath = midi_filepath
         self.mp3 = convert_midi_to_mp3(midi_filepath)
-
-    def mp3_filepath(self):
+    def mp3_filepath(self) -> str:
         return self.midi_filepath.replace(".midi", ".mp3")
 
-def track_names(midi_data):
-  return list(map(lambda track: track.name, midi_dat.tracks))
+def check_format(file_path: str) -> str:
+  """If the format is midi, proceed. If the format is MusicXML, convert to midi.
 
-def instrument_number_for_part(part):
-    # instrument choices based off advice given here: http://www3.cpdl.org/wiki/index.php/User:Robert_Urmann
-    mapping = {
-            "soprano": 76, # pan flute
-            "alt": 75, # recorder
-            "tenor": 49, # string ensemble 1
-            "bass": 50 # string ensemble 2
-            }
-    return mapping[part]
+  Arguments:
+      file_path {[str]} -- path of the file to convert
 
-def rescale_velocities(midi_data):
-    # full range is 0-127
-  min_allowed = 55
-  max_allowed = 70
+  Raises:
+      NameError: Raised if trying to convert a format not supported by the script
 
-  seen_any_note_ons = False
-  for track in midi_data.tracks:
-      for message in track:
-          if message.type == 'note_on':
-              if not seen_any_note_ons:
-                  max_observed = message.velocity
-                  min_observed = message.velocity
-                  seen_any_note_ons = True
-              else:
-                  max_observed = max(message.velocity, max_observed)
-                  min_observed = min(message.velocity, min_observed)
+  Returns:
+      str -- midi file name (original or converted midi file)
+  """
+  if file_path.endswith('.mid') or file_path.endswith('.midi'):
+    return file_path
+  elif file_path.endswith('.mxl'):
+    return convert_music_xml_to_midi(file_path)
+  else:
+    raise NameError('The application currently only supports midi or MusicXML format')
 
-  # TODO: Merge these two iterators and the other message iterator elsewhere
-  for track in midi_data.tracks:
-      for message in track:
-          if message.type == 'note_on':
-              x = message.velocity
-              rescaled_velocity = int((max_allowed - min_allowed) * ((x -
-                  min_observed)/(max_observed - min_observed)) + min_allowed)
-              message.velocity = rescaled_velocity
+def convert_music_xml_to_midi(file_path: str) -> str:
+  """Converts a MusicXML file to midi
 
-def show_midi_analysis():
-  midifile_path = args.midifile_path
-  midi_data = mido.MidiFile(midifile_path)
-  track_count = len(midi_data.tracks)
-  print(f"The file has {track_count} tracks")
+  Arguments:
+      file_path {str} -- file path of the the MusicXML file
+
+  Returns:
+      str -- path of the converted midi file after conversion
+  """
+  converted_file_path = output_directory + '/temp.midi'
+  score: music21.stream.Score = music21.converter.parse(file_path)
+  midi_file = music21.midi.translate.streamToMidiFile(score)
+  midi_file.open(converted_file_path, 'wb')
+  midi_file.write()
+  midi_file.close()
+  return converted_file_path
 
 
-def generate_solo_parts(midi_data, track_numbers, part_name):
+def track_names(midi_data) -> List[map]:
+  return list(map(lambda track: track.name, midi_data.tracks))
+
+def instrument_number_for_part(part: str) -> int:
+  """Fetches the instrument index from the mapping. In case of an instrument
+  parameter this instrument is returned instead of the default mapping
+
+  Arguments:
+      part {str} -- name of the part
+
+  Returns:
+      int -- integer index of an instrument
+  """
+  if (args.instrument):
+    return args.instrument
+  else:
+    return MAPPING[part]
+
+def generate_solo_parts(midi_data: mido.MidiFile, track_numbers: List[int], part_name: str) -> Part:
+  """Generates a solo part and returns a Part object describing it
+
+  Arguments:
+      midi_data {mido.MidiFile} -- original midi data
+      track_numbers {[type]} -- numbers of the tracks to include in the solo parts
+      part_name {str} -- name of the past
+
+  Returns:
+      Part -- generated Part object
+  """
   midi = mido.MidiFile()
   midi.ticks_per_beat = midi_data.ticks_per_beat
 
@@ -90,7 +101,8 @@ def generate_solo_parts(midi_data, track_numbers, part_name):
     midi.tracks.append(midi_data.tracks[track_number])
 
   if part_name in sung_parts:
-      change_instrument(midi, instrument_number_for_part(part_name))
+    instrument_number = instrument_number_for_part(part_name)
+    change_instrument(midi, instrument_number)
   new_file_path = "{}/{}.midi".format(output_directory, part_name)
   midi.save(new_file_path)
 
@@ -98,21 +110,29 @@ def generate_solo_parts(midi_data, track_numbers, part_name):
 
   return part
 
-def convert_midi_to_mp3(midifile_path):
+def convert_midi_to_mp3(midifile_path: str) -> None:
+  """Converts the midi file to mp3 format
+
+  Arguments:
+      midifile_path {str} -- path to the midi file
+
+  Returns:
+      None -- does not return anything. The file is created on the file system using fluidsynth
+  """
   output_base_filename = os.path.splitext(midifile_path)[0]
   # TODO: Hide output unless debug option on... probably need subprocess.run
   os.system("fluidsynth -r 44100 -R 1 -E little -T raw -F - -O s16 {} {} | lame --signed -s 44100 -r - {}.mp3".format(
-    args.soundfont_path, midifile_path, output_base_filename
+    soundfont_path, midifile_path, output_base_filename
   ))
 
-def change_instrument(midi_data, program_number):
+def change_instrument(midi_data: mido.MidiFile, program_number: int):
   for track in midi_data.tracks:
     for message in track:
       if message.type == 'program_change':
         message.program = program_number
 
 # TODO: args is being passed too deep into the call-stack
-def generate_accompaniment(own_part, solo_parts, args):
+def generate_accompaniment(own_part, solo_parts, args) -> None:
   combiner = sox.Combiner()
 
   accompaniment_volume_ratio = 0.33
@@ -135,7 +155,7 @@ def generate_accompaniment(own_part, solo_parts, args):
   output_file_path = "{}/{} mit Begleitung.mp3".format(output_directory, own_part.name)
   combiner.build(input_files, output_file_path, 'mix-power', input_volumes)
 
-def generate_full_mp3(solo_parts):
+def generate_full_mp3(solo_parts: List[Part]) -> None:
   combiner = sox.Combiner()
 
   # docs https://pysox.readthedocs.io/en/latest/api.html
@@ -143,50 +163,60 @@ def generate_full_mp3(solo_parts):
   output_file_path = "{}/alle.mp3".format(output_directory)
   combiner.build(input_files, output_file_path, 'mix-power')
 
-def separate_tracks_into_mp3s():
-  midifile_path = args.midifile_path
-  midi_data = mido.MidiFile(midifile_path)
-  solo_parts = []
-
-  rescale_velocities(midi_data)
+def separate_tracks_into_mp3s(args: argparse.Namespace, midifile_path: str) -> None:
+  midi_data: mido.MidiFile = mido.MidiFile(midifile_path)
+  solo_parts: List[Part] = []
 
   for part_name, track_numbers in solo_track_bundles(args).items():
       solo_part = generate_solo_parts(midi_data, track_numbers, part_name)
       solo_parts.append(solo_part)
 
+  part: Part
   for part in solo_parts:
       generate_accompaniment(part, solo_parts, args)
 
   generate_full_mp3(solo_parts)
 
-def common_solo_tracks():
-    if args.no_common_tracks:
-        return []
-    else:
-        return args.common_solo_tracks
-
-def solo_track_bundles(args):
-  out = {}
+def solo_track_bundles(args: argparse.Namespace) -> dict:
+  out: dict = {}
+  part_name: str
   for part_name in sung_parts:
-      track_number = vars(args)[part_name]
-      if args.no_common_tracks:
-          track_number = track_number -1
-
-      out[part_name] = [track_number] + common_solo_tracks()
+    if(args.common_solo_tracks):
+      out[part_name] = [vars(args)[part_name]] + args.common_solo_tracks
+    else:
+      out[part_name] = [vars(args)[part_name]]
 
   if args.instrumental_accompaniment:
-      out['accompaniment'] = args.instrumental_accompaniment + common_solo_tracks()
+      out['accompaniment'] = args.instrumental_accompaniment + args.common_solo_tracks
 
   return out
 
-def cleanup():
+def cleanup() -> None:
   remove_temporary_midifiles()
 
-def remove_temporary_midifiles():
-    for midi_file in os.listdir(output_directory):
-        if midi_file.endswith('.midi'):
-             os.unlink(os.path.join(output_directory, midi_file))
+def remove_temporary_midifiles() -> None:
+  midi_file: str
+  for midi_file in os.listdir(output_directory):
+      if midi_file.endswith('.midi'):
+            os.unlink(os.path.join(output_directory, midi_file))
 
-show_midi_analysis()
-separate_tracks_into_mp3s()
+parser = argparse.ArgumentParser()
+parser.add_argument("-csts", "--common-solo-tracks", help='midi tracks that must appear \
+        in all solo mp3s e.g. because they contain time signature changes',
+        nargs='+', type=int)
+parser.add_argument("-s", "--soprano", type=int, default=1)
+parser.add_argument("-a", "--alt", type=int, default=2)
+parser.add_argument("-t", "--tenor", type=int, default=3)
+parser.add_argument("-b", "--bass", type=int, default=4)
+parser.add_argument("-in", "--instrument", type=int, help='instrument that should be used for all \
+  voices instead of the advice given at cpdl.org')
+parser.add_argument("-iv", "--instrumental-volume", help="configure instrumental volume", type=float, default=2.0)
+parser.add_argument("-i", "--instrumental-accompaniment", help='midi tracks that \
+        appear in all accompaniment mp3s e.g. piano or orchestra', nargs='+',
+        type=int, default=[])
+parser.add_argument("file_path")
+args = parser.parse_args()
+
+midi_file_path = check_format(args.file_path)
+separate_tracks_into_mp3s(args, midi_file_path)
 cleanup()
