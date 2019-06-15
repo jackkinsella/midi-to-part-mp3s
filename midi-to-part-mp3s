@@ -86,25 +86,25 @@ def instrument_number_for_part(part: str) -> int:
   else:
     return MAPPING[part]
 
-def generate_solo_parts(midi_data: mido.MidiFile, track_numbers: List[int], part_name: str) -> Part:
+def generate_solo_parts(midi_data: mido.MidiFile, track_numbers: List[int], part_name: str, instrument_number: int) -> Part:
   """Generates a solo part and returns a Part object describing it
 
   Arguments:
       midi_data {mido.MidiFile} -- original midi data
-      track_numbers {[type]} -- numbers of the tracks to include in the solo parts
+      track_numbers {List[int]} -- numbers of the tracks to include in the solo parts
       part_name {str} -- name of the past
 
   Returns:
       Part -- generated Part object
   """
-  midi = mido.MidiFile()
-  midi.ticks_per_beat = midi_data.ticks_per_beat
+  midi: mido.MidiFile = mido.MidiFile()
+  midi.ticks_per_beat: int = midi_data.ticks_per_beat
 
+  track_number:int
   for track_number in track_numbers:
     midi.tracks.append(midi_data.tracks[track_number])
 
-  if part_name in sung_parts:
-    instrument_number = instrument_number_for_part(part_name)
+  if part_name != 'accompaniment':
     change_instrument(midi, instrument_number)
   new_file_path = "{}/{}.midi".format(output_directory, part_name)
   midi.save(new_file_path)
@@ -124,13 +124,22 @@ def convert_midi_to_mp3(midifile_path: str) -> None:
   """
   output_base_filename = os.path.splitext(midifile_path)[0]
   # TODO: Hide output unless debug option on... probably need subprocess.run
-  os.system("fluidsynth -r 44100 -R 1 -E little -T raw -F - -O s16 {} {} | lame --signed -s 44100 -r - {}.mp3".format(
+  os.system("fluidsynth -r 44100 -R 1 -E little -T raw -F - -O s16 '{}' '{}' | lame --signed -s 44100 -r - '{}.mp3'".format(
     soundfont_path, midifile_path, output_base_filename
   ))
 
 def change_instrument(midi_data: mido.MidiFile, program_number: int):
+  """Changes the instrument in all tracks of the given midi_data 
+  object to the instrument identified by program_number
+  
+  Arguments:
+      midi_data {mido.MidiFile} -- midi data object
+      program_number {int} -- instrument identifier
+  """
+  track: mido.MidiTrack
   for track in midi_data.tracks:
     found = None
+    message: mido.Message
     for message in track:
       if message.type == 'program_change':
         found = True
@@ -208,9 +217,10 @@ def ensure_midi_well_formatted(midi_data: mido.MidiFile) -> mido.MidiFile:
 def separate_tracks_into_mp3s(args: argparse.Namespace, midifile_path: str) -> None:
   midi_data: mido.MidiFile = ensure_midi_well_formatted(mido.MidiFile(midifile_path))
   solo_parts: List[Part] = []
-
-  for part_name, track_numbers in solo_track_bundles(args).items():
-      solo_part = generate_solo_parts(midi_data, track_numbers, part_name)
+  voices: list = create_voices(args)
+  add_solo_track_bundles(voices)
+  for part_name, track_numbers, instrument in voices:
+      solo_part: Part = generate_solo_parts(midi_data, track_numbers, part_name, instrument)
       solo_parts.append(solo_part)
 
   part: Part
@@ -229,7 +239,44 @@ def solo_track_bundles(args: argparse.Namespace) -> dict:
   if args.instrumental_accompaniment:
       out['accompaniment'] = [tempo_map_track_number, args.instrumental_accompaniment]
 
-  return out
+def create_voices(args: argparse.Namespace) -> list:
+  """Creates a nested list of the voices with their assigned midi track number
+  
+  Arguments:
+      args {argparse.Namespace} -- application arguments
+  
+  Returns:
+      List[List] -- list of voices and their assigned midi track numbers
+  """
+  voices: List[List] = []
+  sung_part: str
+  for sung_part in sung_parts:
+    voice_parameter = vars(args)[sung_part]
+    if(voice_parameter):
+      for i in range(len(voice_parameter)):
+        tracks = []
+        track_id = voice_parameter[i]
+        tracks.append(track_id)
+        instrument = instrument_number_for_part(sung_part)
+        voice = [sung_part + ' ' + str(i+1), tracks, instrument]
+        voices.append(voice)
+  return voices
+
+
+
+def add_solo_track_bundles(voices: list):
+  """Edits the voices list to include solo tracks and add the accompaniment voice
+  
+  Arguments:
+      voices {list} -- list of voices and their assigned midi track numbers
+  
+  Returns:
+      dict -- dictionary with the name of the voice as key and the index of 
+  the midi tracks as value
+  """
+  if args.instrumental_accompaniment:
+      voices.append(['accompaniment', args.instrumental_accompaniment + args.common_solo_tracks, None])
+
 
 def cleanup() -> None:
   remove_temporary_midifiles()
@@ -240,11 +287,34 @@ def remove_temporary_midifiles() -> None:
       if midi_file.endswith('.midi'):
             os.unlink(os.path.join(output_directory, midi_file))
 
+
+def set_defaults(args: argparse.Namespace) -> None:
+  """Sets the soprano, alto, tenor and bass voices 
+  to the default tracks 1, 2, 3 and 4, if no track has been defined.
+  This allows a SSAA or TTBB API setting without the need to overwrite
+  defaults, i.e.:
+
+  midi-to-part-mp3s your-midi.mid --soprano 1 2 --alto 3 4
+  midi-to-part-mp3s your-midi.mid --tenor 1 2 --bass 3 4
+  
+  Arguments:
+      args {argparse.Namespace} -- Original arguments
+  
+  Returns:
+      None -- The args will be overwritten in the original args object
+  """
+  if (args.soprano == None and args.alto == None and
+          args.tenor == None and args.bass == None):
+    args.soprano = [1]
+    args.alto = [2]
+    args.tenor = [3]
+    args.bass = [4]
+    
 parser = argparse.ArgumentParser()
-parser.add_argument("-s", "--soprano", type=int, default=1)
-parser.add_argument("-a", "--alto", type=int, default=2)
-parser.add_argument("-t", "--tenor", type=int, default=3)
-parser.add_argument("-b", "--bass", type=int, default=4)
+parser.add_argument("-s", "--soprano", type=int, nargs='*')
+parser.add_argument("-a", "--alto", type=int, nargs='*')
+parser.add_argument("-t", "--tenor", type=int, nargs='*')
+parser.add_argument("-b", "--bass", type=int, nargs='*')
 parser.add_argument("-in", "--instrument", type=int, help='instrument that should be used for all \
   voices instead of the advice given at cpdl.org')
 parser.add_argument("-iv", "--instrumental-volume", help="configure instrumental volume", type=float, default=2.0)
@@ -254,6 +324,7 @@ parser.add_argument("-i", "--instrumental-accompaniment", help='midi tracks that
 parser.add_argument("file_path")
 args = parser.parse_args()
 
+set_defaults(args)
 midi_file_path = check_format(args.file_path)
 separate_tracks_into_mp3s(args, midi_file_path)
 cleanup()
