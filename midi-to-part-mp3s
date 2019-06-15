@@ -3,9 +3,9 @@ import argparse
 import os
 from typing import List, Dict
 
-import sox
-import mido
-import music21
+import sox # type: ignore
+import mido # type: ignore
+import music21 # type: ignore
 
 output_directory = "./output"
 soundfont_path = "./soundfonts/timbres-of-heaven.sf2"
@@ -23,7 +23,8 @@ class Part:
         self.name = name
         self.midi = midi
         self.midi_filepath = midi_filepath
-        self.mp3 = convert_midi_to_mp3(midi_filepath)
+        convert_midi_to_mp3(midi_filepath)
+
     def mp3_filepath(self) -> str:
         return self.midi_filepath.replace(".midi", ".mp3")
 
@@ -64,7 +65,7 @@ def convert_music_xml_to_midi(file_path: str) -> str:
   return converted_file_path
 
 
-def track_names(midi_data) -> List[map]:
+def track_names(midi_data) -> List[str]:
   return list(map(lambda track: track.name, midi_data.tracks))
 
 def instrument_number_for_part(part: str) -> int:
@@ -145,7 +146,7 @@ def generate_accompaniment(own_part, solo_parts, args) -> None:
       input_files.append(part.mp3_filepath())
 
       if is_own_part:
-          input_volumes.append(1)
+          input_volumes.append(1.0)
       elif is_instrumental:
           input_volumes.append(instrumental_volume_ratio)
       else:
@@ -215,3 +216,7 @@ parser.add_argument("-i", "--instrumental-accompaniment", help='midi tracks that
         type=int, default=[])
 parser.add_argument("file_path")
 args = parser.parse_args()
+
+midi_file_path = check_format(args.file_path)
+separate_tracks_into_mp3s(args, midi_file_path)
+cleanup()

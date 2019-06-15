@@ -7,7 +7,7 @@ This program splits takes a midi file that contains every part of a choral work 
 ```
 $ git clone https://github.com/jackkinsella/midi-to-part-mp3s
 $ brew install timidity lame sox
-$ pip3 install -r requirements.txt`
+$ pip3 install -r requirements.txt
 ```
 
 ## Dependencies
