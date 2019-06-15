@@ -1,12 +1,11 @@
 #!/usr/bin/env python3
 import argparse
 import os
+from typing import List, Dict
 
 import sox
 import mido
 import music21
-
-from typing import List, Dict
 
 output_directory = "./output"
 soundfont_path = "./soundfonts/timbres-of-heaven.sf2"
@@ -216,7 +215,3 @@ parser.add_argument("-i", "--instrumental-accompaniment", help='midi tracks that
         type=int, default=[])
 parser.add_argument("file_path")
 args = parser.parse_args()
-
-midi_file_path = check_format(args.file_path)
-separate_tracks_into_mp3s(args, midi_file_path)
-cleanup()
