@@ -8,6 +8,9 @@ import mido # type: ignore
 import music21 # type: ignore
 
 output_directory = "./output"
+if not os.path.exists(output_directory):
+    os.makedirs(output_directory)
+
 soundfont_path = "./soundfonts/timbres-of-heaven.sf2"
 sung_parts = ['soprano', 'alt', 'bass', 'tenor']
  # instrument choices based off advice given here: http://www3.cpdl.org/wiki/index.php/User:Robert_Urmann
