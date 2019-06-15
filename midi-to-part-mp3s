@@ -4,6 +4,9 @@ import os
 
 import sox
 import mido
+import music21
+
+from typing import List, Dict
 
 output_directory = "./output"
 soundfont_path = "./soundfonts/timbres-of-heaven.sf2"
@@ -17,26 +20,80 @@ MAPPING = {
 }
 
 class Part:
-
-    def __init__(self, name='', midi='', midi_filepath=''):
+    def __init__(self, name: str='', midi: str='', midi_filepath: str=''):
         self.name = name
         self.midi = midi
         self.midi_filepath = midi_filepath
         self.mp3 = convert_midi_to_mp3(midi_filepath)
-    def mp3_filepath(self):
+    def mp3_filepath(self) -> str:
         return self.midi_filepath.replace(".midi", ".mp3")
 
-def track_names(midi_data):
+def check_format(file_path: str) -> str:
+  """If the format is midi, proceed. If the format is MusicXML, convert to midi.
+  
+  Arguments:
+      file_path {[str]} -- path of the file to convert
+  
+  Raises:
+      NameError: Raised if trying to convert a format not supported by the script
+  
+  Returns:
+      str -- midi file name (original or converted midi file)
+  """
+  if file_path.endswith('.mid') or file_path.endswith('.midi'):
+    return file_path
+  elif file_path.endswith('.mxl'):
+    return convert_music_xml_to_midi(file_path)
+  else:
+    raise NameError('The application currently only supports midi or MusicXML format')
+
+def convert_music_xml_to_midi(file_path: str) -> str:
+  """Converts a MusicXML file to midi
+  
+  Arguments:
+      file_path {str} -- file path of the the MusicXML file
+  
+  Returns:
+      str -- path of the converted midi file after conversion
+  """
+  converted_file_path = output_directory + '/temp.midi'
+  score: music21.stream.Score = music21.converter.parse(file_path)
+  midi_file = music21.midi.translate.streamToMidiFile(score)
+  midi_file.open(converted_file_path, 'wb')
+  midi_file.write()
+  midi_file.close()
+  return converted_file_path
+
+
+def track_names(midi_data) -> List[map]:
   return list(map(lambda track: track.name, midi_data.tracks))
 
-def instrument_number_for_part(part):
-  # Override instrument based on the instrument argument
+def instrument_number_for_part(part: str) -> int:
+  """Fetches the instrument index from the mapping. In case of an instrument 
+  parameter this instrument is returned instead of the default mapping
+  
+  Arguments:
+      part {str} -- name of the part
+  
+  Returns:
+      int -- integer index of an instrument
+  """
   if (args.instrument):
     return args.instrument
   else:
     return MAPPING[part]
 
-def generate_solo_parts(midi_data, track_numbers, part_name):
+def generate_solo_parts(midi_data: mido.MidiFile, track_numbers: List[int], part_name: str) -> Part:
+  """Generates a solo part and returns a Part object describing it
+  
+  Arguments:
+      midi_data {mido.MidiFile} -- original midi data
+      track_numbers {[type]} -- numbers of the tracks to include in the solo parts
+      part_name {str} -- name of the past
+  
+  Returns:
+      Part -- generated Part object
+  """
   midi = mido.MidiFile()
   midi.ticks_per_beat = midi_data.ticks_per_beat
 
@@ -53,21 +110,29 @@ def generate_solo_parts(midi_data, track_numbers, part_name):
 
   return part
 
-def convert_midi_to_mp3(midifile_path):
+def convert_midi_to_mp3(midifile_path: str) -> None:
+  """Converts the midi file to mp3 format
+  
+  Arguments:
+      midifile_path {str} -- path to the midi file
+  
+  Returns:
+      None -- does not return anything. The file is created on the file system usning fluidsynth 
+  """
   output_base_filename = os.path.splitext(midifile_path)[0]
   # TODO: Hide output unless debug option on... probably need subprocess.run
   os.system("fluidsynth -r 44100 -R 1 -E little -T raw -F - -O s16 {} {} | lame --signed -s 44100 -r - {}.mp3".format(
     soundfont_path, midifile_path, output_base_filename
   ))
 
-def change_instrument(midi_data, program_number):
+def change_instrument(midi_data: mido.MidiFile, program_number: int):
   for track in midi_data.tracks:
     for message in track:
       if message.type == 'program_change':
         message.program = program_number
 
 # TODO: args is being passed too deep into the call-stack
-def generate_accompaniment(own_part, solo_parts, args):
+def generate_accompaniment(own_part, solo_parts, args) -> None:
   combiner = sox.Combiner()
 
   accompaniment_volume_ratio = 0.33
@@ -90,7 +155,7 @@ def generate_accompaniment(own_part, solo_parts, args):
   output_file_path = "{}/{} mit Begleitung.mp3".format(output_directory, own_part.name)
   combiner.build(input_files, output_file_path, 'mix-power', input_volumes)
 
-def generate_full_mp3(solo_parts):
+def generate_full_mp3(solo_parts: List[Part]) -> None:
   combiner = sox.Combiner()
 
   # docs https://pysox.readthedocs.io/en/latest/api.html
@@ -98,22 +163,23 @@ def generate_full_mp3(solo_parts):
   output_file_path = "{}/alle.mp3".format(output_directory)
   combiner.build(input_files, output_file_path, 'mix-power')
 
-def separate_tracks_into_mp3s(args):
-  midifile_path = args.midifile_path
-  midi_data = mido.MidiFile(midifile_path)
-  solo_parts = []
+def separate_tracks_into_mp3s(args: argparse.Namespace, midifile_path: str) -> None:
+  midi_data: mido.MidiFile = mido.MidiFile(midifile_path)
+  solo_parts: List[Part] = []
 
   for part_name, track_numbers in solo_track_bundles(args).items():
       solo_part = generate_solo_parts(midi_data, track_numbers, part_name)
       solo_parts.append(solo_part)
 
+  part: Part
   for part in solo_parts:
       generate_accompaniment(part, solo_parts, args)
 
   generate_full_mp3(solo_parts)
 
-def solo_track_bundles(args):
-  out = {}
+def solo_track_bundles(args: argparse.Namespace) -> dict:
+  out: dict = {}
+  part_name: str
   for part_name in sung_parts:
     if(args.common_solo_tracks):
       out[part_name] = [vars(args)[part_name]] + args.common_solo_tracks
@@ -125,13 +191,14 @@ def solo_track_bundles(args):
 
   return out
 
-def cleanup():
+def cleanup() -> None:
   remove_temporary_midifiles()
 
-def remove_temporary_midifiles():
-    for midi_file in os.listdir(output_directory):
-        if midi_file.endswith('.midi'):
-             os.unlink(os.path.join(output_directory, midi_file))
+def remove_temporary_midifiles() -> None:
+  midi_file: str
+  for midi_file in os.listdir(output_directory):
+      if midi_file.endswith('.midi'):
+            os.unlink(os.path.join(output_directory, midi_file))
 
 parser = argparse.ArgumentParser()
 parser.add_argument("-csts", "--common-solo-tracks", help='midi tracks that must appear \
@@ -147,8 +214,9 @@ parser.add_argument("-iv", "--instrumental-volume", help="configure instrumental
 parser.add_argument("-i", "--instrumental-accompaniment", help='midi tracks that \
         appear in all accompaniment mp3s e.g. piano or orchestra', nargs='+',
         type=int, default=[])
-parser.add_argument("midifile_path")
+parser.add_argument("file_path")
 args = parser.parse_args()
 
-separate_tracks_into_mp3s(args)
+midi_file_path = check_format(args.file_path)
+separate_tracks_into_mp3s(args, midi_file_path)
 cleanup()
