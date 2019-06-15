@@ -8,12 +8,15 @@ import mido # type: ignore
 import music21 # type: ignore
 
 output_directory = "./output"
+if not os.path.exists(output_directory):
+    os.makedirs(output_directory)
+
 soundfont_path = "./soundfonts/timbres-of-heaven.sf2"
-sung_parts = ['soprano', 'alt', 'bass', 'tenor']
+sung_parts = ['soprano', 'alto', 'bass', 'tenor']
  # instrument choices based off advice given here: http://www3.cpdl.org/wiki/index.php/User:Robert_Urmann
 MAPPING = {
   "soprano": 76, # pan flute
-  "alt": 75, # recorder
+  "alto": 75, # recorder
   "tenor": 49, # string ensemble 1
   "bass": 50 # string ensemble 2
 }
@@ -152,7 +155,7 @@ def generate_accompaniment(own_part, solo_parts, args) -> None:
       else:
           input_volumes.append(accompaniment_volume_ratio)
 
-  output_file_path = "{}/{} mit Begleitung.mp3".format(output_directory, own_part.name)
+  output_file_path = "{}/{} with accompaniment.mp3".format(output_directory, own_part.name)
   combiner.build(input_files, output_file_path, 'mix-power', input_volumes)
 
 def generate_full_mp3(solo_parts: List[Part]) -> None:
@@ -160,7 +163,7 @@ def generate_full_mp3(solo_parts: List[Part]) -> None:
 
   # docs https://pysox.readthedocs.io/en/latest/api.html
   input_files = [part.mp3_filepath() for part in solo_parts]
-  output_file_path = "{}/alle.mp3".format(output_directory)
+  output_file_path = "{}/all.mp3".format(output_directory)
   combiner.build(input_files, output_file_path, 'mix-power')
 
 def separate_tracks_into_mp3s(args: argparse.Namespace, midifile_path: str) -> None:
@@ -205,7 +208,7 @@ parser.add_argument("-csts", "--common-solo-tracks", help='midi tracks that must
         in all solo mp3s e.g. because they contain time signature changes',
         nargs='+', type=int)
 parser.add_argument("-s", "--soprano", type=int, default=1)
-parser.add_argument("-a", "--alt", type=int, default=2)
+parser.add_argument("-a", "--alto", type=int, default=2)
 parser.add_argument("-t", "--tenor", type=int, default=3)
 parser.add_argument("-b", "--bass", type=int, default=4)
 parser.add_argument("-in", "--instrument", type=int, help='instrument that should be used for all \
