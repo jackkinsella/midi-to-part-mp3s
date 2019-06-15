@@ -63,3 +63,21 @@ optional arguments:
 
 ```
 
+## Development
+
+### Virtual Env
+
+When developing, you probably want the python requirements to be installed in a virtual env. We
+assume you name this `mpt_venv`.
+
+```
+$ python3 -m venv mtp_venv
+$ source mpt_venv/bin/activate
+$ pip3 install -r requirements.txt`
+```
+
+### Static type checker
+
+First install [mypy](http://mypy-lang.org/) `$ pip3 install mypy`.  Now run `$
+mypy midi-to-part-mp3s`. Or better yet, integrate `mypy` to your editor for inline
+type warnings.
