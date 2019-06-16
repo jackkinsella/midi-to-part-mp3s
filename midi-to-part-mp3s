@@ -166,8 +166,48 @@ def generate_full_mp3(solo_parts: List[Part]) -> None:
   output_file_path = "{}/all.mp3".format(output_directory)
   combiner.build(input_files, output_file_path, 'mix-power')
 
+def has_separate_tempo_map(number_of_tracks: int) -> bool:
+    if number_of_tracks == 4:
+        return False
+    elif number_of_tracks == 5:
+        return True
+    else:
+        raise NotImplementedError("TODO – code for these cases not added yet")
+
+def separate_out_tempo_map(midi_data: mido.MidiFile) -> str:
+  tempo_map = []
+  track1 = []
+
+  for event in midi_data.tracks[0]:
+      if event.is_meta:
+          if event.type == 'end_of_track':
+              track1.append(event)
+              tempo_map.append(event)
+          elif event.type in ["instrument_name", "key_signature"]:
+              track1.append(event)
+          else:
+              tempo_map.append(event)
+      else:
+          track1.append(event)
+
+  midi = mido.MidiFile()
+  midi.ticks_per_beat = midi_data.ticks_per_beat
+
+  midi.tracks.append(tempo_map)
+  midi.tracks.append(track1)
+  for track in midi_data.tracks[1:]:
+      midi.tracks.append(track)
+
+  return midi
+
+def ensure_midi_well_formatted(midi_data: mido.MidiFile) -> str:
+    if has_separate_tempo_map(len(midi_data.tracks)):
+        return midi_data
+    else:
+        return separate_out_tempo_map(midi_data)
+
 def separate_tracks_into_mp3s(args: argparse.Namespace, midifile_path: str) -> None:
-  midi_data: mido.MidiFile = mido.MidiFile(midifile_path)
+  midi_data: mido.MidiFile = ensure_midi_well_formatted(mido.MidiFile(midifile_path))
   solo_parts: List[Part] = []
 
   for part_name, track_numbers in solo_track_bundles(args).items():

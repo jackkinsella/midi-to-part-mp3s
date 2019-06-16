@@ -21,8 +21,9 @@ $ pip3 install -r requirements.txt
 
 # Usage
 
-**Gotcha:** There is often a midi track for time signatures placed at track 0. This must be included in all solo mp3s,
+**Gotcha:** There is often a midi track for time signatures called a tempo map placed at track 0. This must be included in all solo mp3s,
 otherwise you'll find that a 5 minute track might be over in 1 minute.
+
 ## Quick start
 
 By default, track 0 of the midi is set to time signatures, and tracks 1-4 are set to SATB respectively. These defaults are used with:
@@ -85,3 +86,8 @@ type warnings.
 ### Tests
 
 `$ python3 tests/test-integration.py`
+
+### Available fixtures
+
+* tests/fixtures/Schumann – already includes a separate tempo map. Happy case.
+* tests/fixtures/Schubert-872-sanctus.mid – does not have a separate tempo map, therefore exercises our internal midi rewrite features
