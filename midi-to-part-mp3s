@@ -292,7 +292,11 @@ def set_defaults(args: argparse.Namespace) -> None:
   """Sets the soprano, alto, tenor and bass voices 
   to the default tracks 1, 2, 3 and 4, if no track has been defined.
   This allows a SSAA or TTBB API setting without the need to overwrite
+<<<<<<< HEAD
   defaults, i.e.:
+=======
+  defaults, i. e.:
+>>>>>>> Review Task - Set defaults
 
   midi-to-part-mp3s your-midi.mid --soprano 1 2 --alto 3 4
   midi-to-part-mp3s your-midi.mid --tenor 1 2 --bass 3 4
@@ -309,12 +313,12 @@ def set_defaults(args: argparse.Namespace) -> None:
     args.alto = [2]
     args.tenor = [3]
     args.bass = [4]
-    
+
 parser = argparse.ArgumentParser()
-parser.add_argument("-s", "--soprano", type=int, nargs='*')
-parser.add_argument("-a", "--alto", type=int, nargs='*')
-parser.add_argument("-t", "--tenor", type=int, nargs='*')
-parser.add_argument("-b", "--bass", type=int, nargs='*')
+parser.add_argument("-s", "--soprano", type=int, help='defaults to 1', nargs='*')
+parser.add_argument("-a", "--alto", type=int, help='defaults to 2', nargs='*')
+parser.add_argument("-t", "--tenor", type=int, help='defaults to 3', nargs='*')
+parser.add_argument("-b", "--bass", type=int, help='defaults to 4', nargs='*')
 parser.add_argument("-in", "--instrument", type=int, help='instrument that should be used for all \
   voices instead of the advice given at cpdl.org')
 parser.add_argument("-iv", "--instrumental-volume", help="configure instrumental volume", type=float, default=2.0)
