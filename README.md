@@ -81,3 +81,7 @@ $ pip3 install -r requirements.txt
 First install [mypy](http://mypy-lang.org/) `$ pip3 install mypy`.  Now run `$
 mypy midi-to-part-mp3s`. Or better yet, integrate `mypy` to your editor for inline
 type warnings.
+
+### Tests
+
+`$ python3 tests/test-integration.py`
