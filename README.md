@@ -73,7 +73,7 @@ assume you name this `mpt_venv`.
 ```
 $ python3 -m venv mtp_venv
 $ source mpt_venv/bin/activate
-$ pip3 install -r requirements.txt`
+$ pip3 install -r requirements.txt
 ```
 
 ### Static type checker
