@@ -130,9 +130,15 @@ def convert_midi_to_mp3(midifile_path: str) -> None:
 
 def change_instrument(midi_data: mido.MidiFile, program_number: int):
   for track in midi_data.tracks:
+    found = None
     for message in track:
       if message.type == 'program_change':
+        found = True
         message.program = program_number
+    if not found:
+        program_change_message = mido.Message('program_change', program=program_number)
+        track.insert(0, program_change_message)
+
 
 # TODO: args is being passed too deep into the call-stack
 def generate_accompaniment(own_part, solo_parts, args) -> None:
