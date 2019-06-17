@@ -180,7 +180,7 @@ def has_separate_tempo_map(number_of_tracks: int) -> bool:
     else:
         raise NotImplementedError("TODO – code for these cases not added yet")
 
-def separate_out_tempo_map(midi_data: mido.MidiFile) -> str:
+def separate_out_tempo_map(midi_data: mido.MidiFile) -> mido.MidiFile:
   tempo_map = []
   track1 = []
 
