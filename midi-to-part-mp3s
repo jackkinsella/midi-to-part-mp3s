@@ -172,13 +172,8 @@ def generate_full_mp3(solo_parts: List[Part]) -> None:
   output_file_path = "{}/all.mp3".format(output_directory)
   combiner.build(input_files, output_file_path, 'mix-power')
 
-def has_separate_tempo_map(number_of_tracks: int) -> bool:
-    if number_of_tracks == 4:
-        return False
-    elif number_of_tracks == 5:
-        return True
-    else:
-        raise NotImplementedError("TODO – code for these cases not added yet")
+def has_separate_tempo_map(track0: mido.midifiles.tracks.MidiTrack) -> bool:
+    return not any(event.type == "note_on" for event in track0)
 
 def separate_out_tempo_map(midi_data: mido.MidiFile) -> mido.MidiFile:
   tempo_map = []
@@ -207,7 +202,7 @@ def separate_out_tempo_map(midi_data: mido.MidiFile) -> mido.MidiFile:
   return midi
 
 def ensure_midi_well_formatted(midi_data: mido.MidiFile) -> mido.MidiFile:
-    if has_separate_tempo_map(len(midi_data.tracks)):
+    if has_separate_tempo_map(midi_data.tracks[0]):
         return midi_data
     else:
         return separate_out_tempo_map(midi_data)
