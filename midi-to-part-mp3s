@@ -206,7 +206,7 @@ def separate_out_tempo_map(midi_data: mido.MidiFile) -> str:
 
   return midi
 
-def ensure_midi_well_formatted(midi_data: mido.MidiFile) -> str:
+def ensure_midi_well_formatted(midi_data: mido.MidiFile) -> mido.MidiFile:
     if has_separate_tempo_map(len(midi_data.tracks)):
         return midi_data
     else:
