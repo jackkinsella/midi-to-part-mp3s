@@ -181,12 +181,10 @@ def separate_out_tempo_map(midi_data: mido.MidiFile) -> mido.MidiFile:
 
   for event in midi_data.tracks[0]:
       if event.is_meta:
-          if event.type == 'end_of_track':
-              track1.append(event)
-              tempo_map.append(event)
-          elif event.type in ["instrument_name", "key_signature"]:
+          if event.type in ["instrument_name", "key_signature"]:
               track1.append(event)
           else:
+              track1.append(event)
               tempo_map.append(event)
       else:
           track1.append(event)
@@ -223,15 +221,13 @@ def separate_tracks_into_mp3s(args: argparse.Namespace, midifile_path: str) -> N
 
 def solo_track_bundles(args: argparse.Namespace) -> dict:
   out: dict = {}
+  tempo_map_track_number = 0
   part_name: str
   for part_name in sung_parts:
-    if(args.common_solo_tracks):
-      out[part_name] = [vars(args)[part_name]] + args.common_solo_tracks
-    else:
-      out[part_name] = [vars(args)[part_name]]
+      out[part_name] = [tempo_map_track_number, vars(args)[part_name]]
 
   if args.instrumental_accompaniment:
-      out['accompaniment'] = args.instrumental_accompaniment + args.common_solo_tracks
+      out['accompaniment'] = [tempo_map_track_number, args.instrumental_accompaniment]
 
   return out
 
@@ -245,9 +241,6 @@ def remove_temporary_midifiles() -> None:
             os.unlink(os.path.join(output_directory, midi_file))
 
 parser = argparse.ArgumentParser()
-parser.add_argument("-csts", "--common-solo-tracks", help='midi tracks that must appear \
-        in all solo mp3s e.g. because they contain time signature changes',
-        nargs='+', type=int)
 parser.add_argument("-s", "--soprano", type=int, default=1)
 parser.add_argument("-a", "--alto", type=int, default=2)
 parser.add_argument("-t", "--tenor", type=int, default=3)
