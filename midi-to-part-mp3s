@@ -130,9 +130,15 @@ def convert_midi_to_mp3(midifile_path: str) -> None:
 
 def change_instrument(midi_data: mido.MidiFile, program_number: int):
   for track in midi_data.tracks:
+    found = None
     for message in track:
       if message.type == 'program_change':
+        found = True
         message.program = program_number
+    if not found:
+        program_change_message = mido.Message('program_change', program=program_number)
+        track.insert(0, program_change_message)
+
 
 # TODO: args is being passed too deep into the call-stack
 def generate_accompaniment(own_part, solo_parts, args) -> None:
@@ -166,8 +172,41 @@ def generate_full_mp3(solo_parts: List[Part]) -> None:
   output_file_path = "{}/all.mp3".format(output_directory)
   combiner.build(input_files, output_file_path, 'mix-power')
 
+def has_separate_tempo_map(track0: mido.midifiles.tracks.MidiTrack) -> bool:
+    return not any(event.type == "note_on" for event in track0)
+
+def separate_out_tempo_map(midi_data: mido.MidiFile) -> mido.MidiFile:
+  tempo_map = []
+  track1 = []
+
+  for event in midi_data.tracks[0]:
+      if event.is_meta:
+          if event.type in ["instrument_name", "key_signature"]:
+              track1.append(event)
+          else:
+              track1.append(event)
+              tempo_map.append(event)
+      else:
+          track1.append(event)
+
+  midi = mido.MidiFile()
+  midi.ticks_per_beat = midi_data.ticks_per_beat
+
+  midi.tracks.append(tempo_map)
+  midi.tracks.append(track1)
+  for track in midi_data.tracks[1:]:
+      midi.tracks.append(track)
+
+  return midi
+
+def ensure_midi_well_formatted(midi_data: mido.MidiFile) -> mido.MidiFile:
+    if has_separate_tempo_map(midi_data.tracks[0]):
+        return midi_data
+    else:
+        return separate_out_tempo_map(midi_data)
+
 def separate_tracks_into_mp3s(args: argparse.Namespace, midifile_path: str) -> None:
-  midi_data: mido.MidiFile = mido.MidiFile(midifile_path)
+  midi_data: mido.MidiFile = ensure_midi_well_formatted(mido.MidiFile(midifile_path))
   solo_parts: List[Part] = []
 
   for part_name, track_numbers in solo_track_bundles(args).items():
@@ -182,15 +221,13 @@ def separate_tracks_into_mp3s(args: argparse.Namespace, midifile_path: str) -> N
 
 def solo_track_bundles(args: argparse.Namespace) -> dict:
   out: dict = {}
+  tempo_map_track_number = 0
   part_name: str
   for part_name in sung_parts:
-    if(args.common_solo_tracks):
-      out[part_name] = [vars(args)[part_name]] + args.common_solo_tracks
-    else:
-      out[part_name] = [vars(args)[part_name]]
+      out[part_name] = [tempo_map_track_number, vars(args)[part_name]]
 
   if args.instrumental_accompaniment:
-      out['accompaniment'] = args.instrumental_accompaniment + args.common_solo_tracks
+      out['accompaniment'] = [tempo_map_track_number, args.instrumental_accompaniment]
 
   return out
 
@@ -204,9 +241,6 @@ def remove_temporary_midifiles() -> None:
             os.unlink(os.path.join(output_directory, midi_file))
 
 parser = argparse.ArgumentParser()
-parser.add_argument("-csts", "--common-solo-tracks", help='midi tracks that must appear \
-        in all solo mp3s e.g. because they contain time signature changes',
-        nargs='+', type=int)
 parser.add_argument("-s", "--soprano", type=int, default=1)
 parser.add_argument("-a", "--alto", type=int, default=2)
 parser.add_argument("-t", "--tenor", type=int, default=3)

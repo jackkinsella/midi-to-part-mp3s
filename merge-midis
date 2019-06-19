@@ -2,7 +2,7 @@
 import argparse
 import os
 
-import mido
+import mido # type: ignore
 
 parser = argparse.ArgumentParser()
 parser.add_argument("-s", "--soprano", default='soprano.mid')
@@ -10,6 +10,7 @@ parser.add_argument("-a", "--alt", default='alt.mid')
 parser.add_argument("-t", "--tenor", default='tenor.mid')
 parser.add_argument("-b", "--bass", default='bass.mid')
 args = parser.parse_args()
+
 
 solo_midi_files = list(map(lambda
         midifile_path: mido.MidiFile(midifile_path),
