@@ -27,7 +27,7 @@ class TestIntegration(unittest.TestCase):
         os.system(cmd)
 
         audio_lengths = []
-        for output_file in ['soprano', 'alto', 'bass', 'tenor']:
+        for output_file in ['soprano 1', 'alto 1', 'bass 1', 'tenor 1']:
             audio_lengths.append(audio_length("{}/{}.mp3".format(output_directory,
                 output_file, ".mp3")))
 
