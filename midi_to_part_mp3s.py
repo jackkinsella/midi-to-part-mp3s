@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import argparse
 import os
+import sys
 from typing import List, Dict
 
 import sox # type: ignore
@@ -20,6 +21,7 @@ MAPPING = {
   "tenor": 49, # string ensemble 1
   "bass": 50 # string ensemble 2
 }
+args = None
 
 class Part:
     def __init__(self, name: str='', midi: str='', midi_filepath: str=''):
@@ -81,6 +83,7 @@ def instrument_number_for_part(part: str) -> int:
   Returns:
       int -- integer index of an instrument
   """
+  global args
   if (args.instrument):
     return args.instrument
   else:
@@ -150,8 +153,7 @@ def change_instrument(midi_data: mido.MidiFile, program_number: int):
         track.insert(0, program_change_message)
 
 
-# TODO: args is being passed too deep into the call-stack
-def generate_accompaniment(own_part, solo_parts, args) -> None:
+def generate_accompaniment(own_part, solo_parts) -> None:
   combiner = sox.Combiner()
 
   accompaniment_volume_ratio = 0.33
@@ -218,7 +220,7 @@ def ensure_midi_well_formatted(midi_data: mido.MidiFile) -> mido.MidiFile:
 def separate_tracks_into_mp3s(args: argparse.Namespace, midifile_path: str) -> None:
   midi_data: mido.MidiFile = ensure_midi_well_formatted(mido.MidiFile(midifile_path))
   solo_parts: List[Part] = []
-  voices: list = create_voices(args)
+  voices: list = create_voices()
   add_accompaniment(voices)
   for part_name, track_numbers, instrument in voices:
       solo_part: Part = generate_solo_parts(midi_data, track_numbers, part_name, instrument)
@@ -226,15 +228,12 @@ def separate_tracks_into_mp3s(args: argparse.Namespace, midifile_path: str) -> N
 
   part: Part
   for part in solo_parts:
-      generate_accompaniment(part, solo_parts, args)
+      generate_accompaniment(part, solo_parts)
 
   generate_full_mp3(solo_parts)
 
-def create_voices(args: argparse.Namespace) -> list:
+def create_voices() -> list:
   """Creates a nested list of the voices with their assigned midi track number
-  
-  Arguments:
-      args {argparse.Namespace} -- application arguments
   
   Returns:
       List[List] -- list of voices and their assigned midi track numbers
@@ -298,21 +297,32 @@ def set_defaults(args: argparse.Namespace) -> None:
     args.tenor = [3]
     args.bass = [4]
 
-parser = argparse.ArgumentParser()
-parser.add_argument("-s", "--soprano", type=int, help='defaults to 1', nargs='*')
-parser.add_argument("-a", "--alto", type=int, help='defaults to 2', nargs='*')
-parser.add_argument("-t", "--tenor", type=int, help='defaults to 3', nargs='*')
-parser.add_argument("-b", "--bass", type=int, help='defaults to 4', nargs='*')
-parser.add_argument("-in", "--instrument", type=int, help='instrument that should be used for all \
-  voices instead of the advice given at cpdl.org')
-parser.add_argument("-iv", "--instrumental-volume", help="configure instrumental volume", type=float, default=2.0)
-parser.add_argument("-i", "--instrumental-accompaniment", help='midi tracks that \
-        appear in all accompaniment mp3s e.g. piano or orchestra', nargs='+',
-        type=int, default=[])
-parser.add_argument("file_path")
-args = parser.parse_args()
+def get_parser() -> argparse.ArgumentParser:
+  parser = argparse.ArgumentParser()
+  parser.add_argument("-s", "--soprano", type=int, help='defaults to 1', nargs='*')
+  parser.add_argument("-a", "--alto", type=int, help='defaults to 2', nargs='*')
+  parser.add_argument("-t", "--tenor", type=int, help='defaults to 3', nargs='*')
+  parser.add_argument("-b", "--bass", type=int, help='defaults to 4', nargs='*')
+  parser.add_argument("-in", "--instrument", type=int, help='instrument that should be used for all \
+    voices instead of the advice given at cpdl.org')
+  parser.add_argument("-iv", "--instrumental-volume", help="configure instrumental volume", type=float, default=2.0)
+  parser.add_argument("-i", "--instrumental-accompaniment", help='midi tracks that \
+          appear in all accompaniment mp3s e.g. piano or orchestra', nargs='+',
+          type=int, default=[])
+  parser.add_argument("file_path")
+  return parser
 
-set_defaults(args)
-midi_file_path = check_format(args.file_path)
-separate_tracks_into_mp3s(args, midi_file_path)
-cleanup()
+
+def main(sys_args):
+  parser = get_parser()
+  global args
+  args = parser.parse_args(sys_args)
+  set_defaults(args)
+  if not os.path.exists(output_directory):
+    os.makedirs(output_directory)
+  midi_file_path = check_format(args.file_path)
+  separate_tracks_into_mp3s(args, midi_file_path)
+  cleanup()
+
+if __name__ == "__main__":
+  main(sys.argv[1:])
