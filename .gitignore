@@ -3,8 +3,12 @@ output/
 soundfonts/*.sf2
 
 # Editors, support code
-.vscode/
+.vscode
 .mypy_cache
 
 # Python virtual environments
 mtp_venv/
+
+# Python caching
+__pycache__
+.pytest_cache

@@ -93,6 +93,7 @@ def generate_solo_parts(midi_data: mido.MidiFile, track_numbers: List[int], part
       midi_data {mido.MidiFile} -- original midi data
       track_numbers {List[int]} -- numbers of the tracks to include in the solo parts
       part_name {str} -- name of the past
+      instrument_number {int} -- id of the instrument in the configured soundfont
 
   Returns:
       Part -- generated Part object
@@ -229,16 +230,6 @@ def separate_tracks_into_mp3s(args: argparse.Namespace, midifile_path: str) -> N
 
   generate_full_mp3(solo_parts)
 
-def solo_track_bundles(args: argparse.Namespace) -> dict:
-  out: dict = {}
-  tempo_map_track_number = 0
-  part_name: str
-  for part_name in sung_parts:
-      out[part_name] = [tempo_map_track_number, vars(args)[part_name]]
-
-  if args.instrumental_accompaniment:
-      out['accompaniment'] = [tempo_map_track_number, args.instrumental_accompaniment]
-
 def create_voices(args: argparse.Namespace) -> list:
   """Creates a nested list of the voices with their assigned midi track number
   
@@ -249,6 +240,7 @@ def create_voices(args: argparse.Namespace) -> list:
       List[List] -- list of voices and their assigned midi track numbers
   """
   voices: List[List] = []
+  tempo_map_track_number = 0
   sung_part: str
   for sung_part in sung_parts:
     voice_midi_tracks = vars(args)[sung_part]
@@ -256,6 +248,7 @@ def create_voices(args: argparse.Namespace) -> list:
       for i in range(len(voice_midi_tracks)):
         tracks = []
         track_id = voice_midi_tracks[i]
+        tracks.append(tempo_map_track_number)
         tracks.append(track_id)
         instrument = instrument_number_for_part(sung_part)
         voice = [sung_part + ' ' + str(i+1), tracks, instrument]
