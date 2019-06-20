@@ -1,6 +1,7 @@
 # Project
 output/
 soundfonts/*.sf2
+tmp/
 
 # Editors, support code
 .vscode
@@ -12,3 +13,4 @@ mtp_venv/
 # Python caching
 __pycache__
 .pytest_cache
+*.pyc

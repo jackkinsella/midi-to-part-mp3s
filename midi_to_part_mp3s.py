@@ -9,7 +9,7 @@ import sox  # type: ignore
 import mido  # type: ignore
 import music21  # type: ignore
 
-output_directory = "./output"
+output_directory = './output'
 soundfont_path = "./soundfonts/timbres-of-heaven.sf2"
 sung_parts = ['soprano', 'alto', 'bass', 'tenor']
 # instrument choices based off advice given here: http://www3.cpdl.org/wiki/index.php/User:Robert_Urmann
@@ -63,7 +63,7 @@ def convert_music_xml_to_midi(file_path: str) -> str:
     Returns:
         str -- path of the converted midi file after conversion
     """
-    converted_file_path = output_directory + '/temp.midi'
+    converted_file_path = args.output + '/temp.midi'
     score: music21.stream.Score = music21.converter.parse(file_path)
     midi_file = music21.midi.translate.streamToMidiFile(score)
     midi_file.open(converted_file_path, 'wb')
@@ -87,14 +87,13 @@ def instrument_number_for_part(part: str) -> int:
         int -- integer index of an instrument
     """
     global args
-    if (args.instrument):
+    if (args.instrument != None):
         return args.instrument
     else:
         return MAPPING[part]
 
 
-def generate_solo_parts(midi_data: mido.MidiFile, track_numbers: List[int],
-                        part_name: str, instrument_number: int) -> Part:
+def generate_solo_parts(midi_data: mido.MidiFile, track_numbers: List[int], part_name: str, instrument_number: int) -> Part:
     """Generates a solo part and returns a Part object describing it
 
     Arguments:
@@ -115,7 +114,7 @@ def generate_solo_parts(midi_data: mido.MidiFile, track_numbers: List[int],
 
     if part_name != 'accompaniment':
         change_instrument(midi, instrument_number)
-    new_file_path = "{}/{}.midi".format(output_directory, part_name)
+    new_file_path = "{}/{}.midi".format(args.output, part_name)
     midi.save(new_file_path)
 
     part = Part(name=part_name, midi=midi, midi_filepath=new_file_path)
@@ -182,7 +181,7 @@ def generate_accompaniment(own_part, solo_parts) -> None:
             input_volumes.append(accompaniment_volume_ratio)
 
     output_file_path = "{}/{} with accompaniment.mp3".format(
-        output_directory, own_part.name)
+        args.output, own_part.name)
     combiner.build(input_files, output_file_path, 'mix-power', input_volumes)
 
 
@@ -191,7 +190,7 @@ def generate_full_mp3(solo_parts: List[Part]) -> None:
 
     # docs https://pysox.readthedocs.io/en/latest/api.html
     input_files = [part.mp3_filepath() for part in solo_parts]
-    output_file_path = "{}/all.mp3".format(output_directory)
+    output_file_path = "{}/all.mp3".format(args.output)
     combiner.build(input_files, output_file_path, 'mix-power')
 
 
@@ -280,7 +279,7 @@ def add_accompaniment(voices: list) -> None:
     """
     if args.instrumental_accompaniment:
         voices.append(
-            ['accompaniment', args.instrumental_accompaniment + args.common_solo_tracks, None])
+            ['accompaniment', args.instrumental_accompaniment, None])
 
 
 def cleanup() -> None:
@@ -289,17 +288,19 @@ def cleanup() -> None:
 
 def prepare_output_directory() -> None:
     """ Ensures an empty output directory is available"""
-    if os.path.exists(output_directory):
-        shutil.rmtree(output_directory)
+    if os.path.exists(args.output):
+        shutil.rmtree(args.output)
 
-    os.makedirs(output_directory)
+    os.makedirs(args.output)
+
+
 
 
 def remove_temporary_midifiles() -> None:
     midi_file: str
-    for midi_file in os.listdir(output_directory):
+    for midi_file in os.listdir(args.output):
         if midi_file.endswith('.midi'):
-            os.unlink(os.path.join(output_directory, midi_file))
+            os.unlink(os.path.join(args.output, midi_file))
 
 
 def set_defaults(args: argparse.Namespace) -> None:
@@ -351,6 +352,8 @@ def get_parser() -> argparse.ArgumentParser:
     parser.add_argument("-i", "--instrumental-accompaniment", help='midi tracks that \
           appear in all accompaniment mp3s e.g. piano or orchestra', nargs='+',
                         type=int, default=[])
+    parser.add_argument("-o", "--output", type=str, default=output_directory,
+                        help="Output folder for the files. Defaults to './output'")
     requiredNamed = parser.add_argument_group('mandatory argument')
     requiredNamed.add_argument("-f", "--file-path", required=True,
                                help='Input file to generate the tracks from. Can be Midi or \
