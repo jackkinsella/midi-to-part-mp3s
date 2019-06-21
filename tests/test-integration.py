@@ -11,7 +11,8 @@ def audio_length(mp3_filepath):
 
 class TestIntegration(unittest.TestCase):
     def setUp(self):
-        shutil.rmtree(output_directory)
+        if(os.path.exists(output_directory)):
+            shutil.rmtree(output_directory)
 
     def test_conversion_of_midi_with_separate_tempo_map(self):
         midi_file_path = "./tests/fixtures/Schumann-op67-4.mid"
@@ -27,7 +28,7 @@ class TestIntegration(unittest.TestCase):
         os.system(cmd)
 
         audio_lengths = []
-        for output_file in ['soprano', 'alto', 'bass', 'tenor']:
+        for output_file in ['soprano 1', 'alto 1', 'bass 1', 'tenor 1']:
             audio_lengths.append(audio_length("{}/{}.mp3".format(output_directory,
                 output_file, ".mp3")))
 
