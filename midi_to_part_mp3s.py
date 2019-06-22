@@ -2,6 +2,7 @@
 import argparse
 import os
 import sys
+import shutil
 from typing import List, Dict
 
 import sox # type: ignore
@@ -9,9 +10,6 @@ import mido # type: ignore
 import music21 # type: ignore
 
 output_directory = "./output"
-if not os.path.exists(output_directory):
-    os.makedirs(output_directory)
-
 soundfont_path = "./soundfonts/timbres-of-heaven.sf2"
 sung_parts = ['soprano', 'alto', 'bass', 'tenor']
  # instrument choices based off advice given here: http://www3.cpdl.org/wiki/index.php/User:Robert_Urmann
@@ -133,9 +131,9 @@ def convert_midi_to_mp3(midifile_path: str) -> None:
   ))
 
 def change_instrument(midi_data: mido.MidiFile, program_number: int):
-  """Changes the instrument in all tracks of the given midi_data 
+  """Changes the instrument in all tracks of the given midi_data
   object to the instrument identified by program_number
-  
+
   Arguments:
       midi_data {mido.MidiFile} -- midi data object
       program_number {int} -- instrument identifier
@@ -234,7 +232,7 @@ def separate_tracks_into_mp3s(args: argparse.Namespace, midifile_path: str) -> N
 
 def create_voices() -> list:
   """Creates a nested list of the voices with their assigned midi track number
-  
+
   Returns:
       List[List] -- list of voices and their assigned midi track numbers
   """
@@ -258,7 +256,7 @@ def create_voices() -> list:
 
 def add_accompaniment(voices: list) -> None:
   """Edits the voices list to include the accompaniment voice
-  
+
   Arguments:
       voices {list} -- list of voices and their assigned midi track numbers
   """
@@ -269,6 +267,13 @@ def add_accompaniment(voices: list) -> None:
 def cleanup() -> None:
   remove_temporary_midifiles()
 
+def prepare_output_directory() -> None:
+    """ Ensures an empty output directory is available"""
+    if os.path.exists(output_directory):
+        shutil.rmtree(output_directory)
+
+    os.makedirs(output_directory)
+
 def remove_temporary_midifiles() -> None:
   midi_file: str
   for midi_file in os.listdir(output_directory):
@@ -277,16 +282,16 @@ def remove_temporary_midifiles() -> None:
 
 
 def set_defaults(args: argparse.Namespace) -> None:
-  """Sets the soprano, alto, tenor and bass voices 
+  """Sets the soprano, alto, tenor and bass voices
   to the default tracks 1, 2, 3 and 4, if no track has been defined.
   This allows a SSAA or TTBB API setting without the need to overwrite
   defaults, i.e.:
   midi-to-part-mp3s your-midi.mid --soprano 1 2 --alto 3 4
   midi-to-part-mp3s your-midi.mid --tenor 1 2 --bass 3 4
-  
+
   Arguments:
       args {argparse.Namespace} -- Original arguments
-  
+
   Returns:
       None -- The args will be overwritten in the original args object
   """
@@ -318,8 +323,7 @@ def main(sys_args):
   global args
   args = parser.parse_args(sys_args)
   set_defaults(args)
-  if not os.path.exists(output_directory):
-    os.makedirs(output_directory)
+  prepare_output_directory()
   midi_file_path = check_format(args.file_path)
   separate_tracks_into_mp3s(args, midi_file_path)
   cleanup()
