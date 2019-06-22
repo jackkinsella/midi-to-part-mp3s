@@ -269,10 +269,10 @@ def cleanup() -> None:
 
 def prepare_output_directory() -> None:
     """ Ensures an empty output directory is available"""
-    if not os.path.exists(output_directory):
-        os.makedirs(output_directory)
-    else:
+    if os.path.exists(output_directory):
         shutil.rmtree(output_directory)
+
+    os.makedirs(output_directory)
 
 def remove_temporary_midifiles() -> None:
   midi_file: str
