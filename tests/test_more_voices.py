@@ -27,7 +27,8 @@ class TestMoreVoices(unittest.TestCase):
         return super().tearDown()
 
     def test_defaut_settings(self):
-        arguments: List[str] = ["./tests/fixtures/Brahms-Da-unten-im-Tale.mid"]
+        arguments: List[str] = [
+            "-f", "./tests/fixtures/Brahms-Da-unten-im-Tale.mid"]
         expected_filenames = ['tenor 1 with accompaniment.mp3', 'soprano 1.mp3',
                               'tenor 1.mp3', 'bass 1.mp3', 'soprano 1 with accompaniment.mp3',
                               'alto 1 with accompaniment.mp3', 'alto 1.mp3', 'all.mp3',
@@ -35,8 +36,8 @@ class TestMoreVoices(unittest.TestCase):
         self._simple_file_list_check(arguments, expected_filenames)
 
     def test_ssaa(self):
-        arguments: List[str] = ["./tests/fixtures/Brahms-Da-unten-im-Tale.mid",
-                                '--soprano', '1', '2', '--alto', '3', '4']
+        arguments: List[str] = ["-f", "./tests/fixtures/Brahms-Da-unten-im-Tale.mid",
+                                '--soprano', '1,2', '--alto', '3,4']
         expected_filenames = ['soprano 1.mp3', 'soprano 1 with accompaniment.mp3',
                               'soprano 2.mp3', 'soprano 2 with accompaniment.mp3',
                               'alto 1.mp3', 'alto 1 with accompaniment.mp3',
@@ -45,9 +46,9 @@ class TestMoreVoices(unittest.TestCase):
         self._simple_file_list_check(arguments, expected_filenames)
 
     def test_ssaattbb(self):
-        arguments: List[str] = ["./tests/fixtures/Abendlied-Rheinberger.mxl",
-                                '--soprano', '1', '2', '--alto', '3', '4',
-                                '--tenor', '5', '6', '--bass', '7', '8']
+        arguments: List[str] = ["-f", "./tests/fixtures/Abendlied-Rheinberger.mxl",
+                                '--soprano', '1,2', '--alto', '3,4',
+                                '--tenor', '5,6', '--bass', '7,8']
         expected_filenames = ['soprano 1.mp3', 'soprano 1 with accompaniment.mp3',
                               'soprano 2.mp3', 'soprano 2 with accompaniment.mp3',
                               'alto 1.mp3', 'alto 1 with accompaniment.mp3',
