@@ -1,3 +1,4 @@
+import midi_to_part_mp3s
 import unittest
 import shutil
 import argparse
@@ -10,8 +11,6 @@ import os.path as path
 import sys
 current_dir = path.dirname(path.abspath(getsourcefile(lambda: 0)))
 sys.path.insert(0, current_dir[:current_dir.rfind(path.sep)])
-
-import midi_to_part_mp3s
 
 
 class TestMoreVoices(unittest.TestCase):

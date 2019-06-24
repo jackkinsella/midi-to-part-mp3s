@@ -83,11 +83,18 @@ First install [mypy](http://mypy-lang.org/) `$ pip3 install mypy`.  Now run `$
 mypy midi-to-part-mp3s`. Or better yet, integrate `mypy` to your editor for inline
 type warnings.
 
+### Code formatting
+
+First install [autopep8](https://pypi.org/project/autopep8/) `$ pip3 install autopep8`. Now run
+`$ autopep8 <filename>`. Best include `autopep8` in your editor to format the code on save automatically.
+
 ### Tests
 
 `$ python3 tests/test-integration.py`
 
 ### Available fixtures
 
-* tests/fixtures/Schumann – already includes a separate tempo map. Happy case.
+* tests/fixtures/Schumann-op67-4.mid – already includes a separate tempo map. Happy case.
 * tests/fixtures/Schubert-872-sanctus.mid – does not have a separate tempo map, therefore exercises our internal midi rewrite features
+* tests/fixtures/Brahms-Da-unten-im-Tale.mid - Another SATB example for general testing
+* tests/fixtures/Abendlied-Rheinberger.xml - MusicXML example to test conversion and SSAATTBB track generation

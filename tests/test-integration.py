@@ -2,12 +2,14 @@ import unittest
 import os
 import shutil
 
-import sox # type: ignore
+import sox  # type: ignore
 
 output_directory = "./output"
 
+
 def audio_length(mp3_filepath):
     return sox.file_info.duration(mp3_filepath)
+
 
 class TestIntegration(unittest.TestCase):
     def setUp(self):
@@ -30,9 +32,10 @@ class TestIntegration(unittest.TestCase):
         audio_lengths = []
         for output_file in ['soprano 1', 'alto 1', 'bass 1', 'tenor 1']:
             audio_lengths.append(audio_length("{}/{}.mp3".format(output_directory,
-                output_file, ".mp3")))
+                                                                 output_file, ".mp3")))
 
         self.assertSequenceEqual(audio_lengths, [audio_lengths[0]] * 4)
+
 
 if __name__ == '__main__':
     unittest.main()

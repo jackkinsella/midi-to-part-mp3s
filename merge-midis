@@ -2,7 +2,7 @@
 import argparse
 import os
 
-import mido # type: ignore
+import mido  # type: ignore
 
 parser = argparse.ArgumentParser()
 parser.add_argument("-s", "--soprano", default='soprano.mid')
@@ -13,16 +13,16 @@ args = parser.parse_args()
 
 
 solo_midi_files = list(map(lambda
-        midifile_path: mido.MidiFile(midifile_path),
-        [args.soprano, args.alt, args.tenor, args.bass]
-    ))
+                           midifile_path: mido.MidiFile(midifile_path),
+                           [args.soprano, args.alt, args.tenor, args.bass]
+                           ))
 
 output_midi = mido.MidiFile()
 output_midi.ticks_per_beat = solo_midi_files[0].ticks_per_beat
 
 for solo_midi_file in solo_midi_files:
-  number_of_tracks = len(solo_midi_file.tracks)
-  # print(f"Has {number_of_tracks} tracks")
-  output_midi.tracks.append(solo_midi_file.tracks[0])
+    number_of_tracks = len(solo_midi_file.tracks)
+    # print(f"Has {number_of_tracks} tracks")
+    output_midi.tracks.append(solo_midi_file.tracks[0])
 
 output_midi.save('out.mid')
