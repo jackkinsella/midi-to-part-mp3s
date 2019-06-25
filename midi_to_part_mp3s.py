@@ -47,7 +47,7 @@ def check_format(file_path: str) -> str:
     """
     if file_path.endswith('.mid') or file_path.endswith('.midi'):
         return file_path
-    elif file_path.endswith('.mxl'):
+    elif file_path.endswith('.mxl') or file_path.endswith('.musicxml'):
         return convert_music_xml_to_midi(file_path)
     else:
         raise NameError(
@@ -322,27 +322,39 @@ def set_defaults(args: argparse.Namespace) -> None:
         args.alto = [2]
         args.tenor = [3]
         args.bass = [4]
+    else:
+        if args.soprano:
+            args.soprano = [int(track) for track in args.soprano.split(',')]
+        if args.alto:
+            args.alto = [int(track) for track in args.alto.split(',')]
+        if args.tenor:
+            args.tenor = [int(track) for track in args.tenor.split(',')]
+        if args.bass:
+            args.bass = [int(track) for track in args.bass.split(',')]
 
 
 def get_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser()
-    parser.add_argument("-s", "--soprano", type=int,
-                        help='defaults to 1', nargs='*')
-    parser.add_argument("-a", "--alto", type=int,
-                        help='defaults to 2', nargs='*')
-    parser.add_argument("-t", "--tenor", type=int,
-                        help='defaults to 3', nargs='*')
-    parser.add_argument("-b", "--bass", type=int,
-                        help='defaults to 4', nargs='*')
+    parser.add_argument("-s", "--soprano", type=str,
+                        help='comma separated list of midi track IDs, defaults to "1"')
+    parser.add_argument("-a", "--alto", type=str,
+                        help='comma separated list of midi track IDs, defaults to "2"')
+    parser.add_argument("-t", "--tenor", type=str,
+                        help='comma separated list of midi track IDs, defaults to "3"')
+    parser.add_argument("-b", "--bass", type=str,
+                        help='comma separated list of midi track IDs, defaults to "4"')
     parser.add_argument("-in", "--instrument", type=int,
-                        help=('instrument that should be used for all voices instead ' +
-                              'of the advice given at cpdl.org'))
+                        help=('instrument that should be used for all voices instead \
+                              of the advice given at cpdl.org'))
     parser.add_argument("-iv", "--instrumental-volume",
                         help="configure instrumental volume", type=float, default=2.0)
     parser.add_argument("-i", "--instrumental-accompaniment", help='midi tracks that \
           appear in all accompaniment mp3s e.g. piano or orchestra', nargs='+',
                         type=int, default=[])
-    parser.add_argument("file_path")
+    requiredNamed = parser.add_argument_group('mandatory argument')
+    requiredNamed.add_argument("-f", "--file-path", required=True,
+                               help='Input file to generate the tracks from. Can be Midi or \
+                            MusicXML (.mid, .midi, .mxl, .musicxml)')
     return parser
 
 

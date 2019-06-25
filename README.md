@@ -71,7 +71,7 @@ optional arguments:
 When developing, you probably want the python requirements to be installed in a virtual env. We
 assume you name this `mpt_venv`.
 
-```
+```bash
 $ python3 -m venv mtp_venv
 $ source mpt_venv/bin/activate
 $ pip3 install -r requirements.txt
@@ -90,7 +90,11 @@ First install [autopep8](https://pypi.org/project/autopep8/) `$ pip3 install aut
 
 ### Tests
 
-`$ python3 tests/test-integration.py`
+```bash
+$ python3 tests/test_argument_parser.py
+$ python3 tests/test_more_voices.py
+$ python3 tests/test_integration.py
+```
 
 ### Available fixtures
 
