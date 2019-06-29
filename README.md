@@ -74,7 +74,7 @@ assume you name this `mpt_venv`.
 ```bash
 $ python3 -m venv mtp_venv
 $ source mpt_venv/bin/activate
-$ pip3 install -r requirements.txt
+(mtp_venv) $ pip install -r requirements.txt
 ```
 
 ### Static type checker
@@ -89,11 +89,10 @@ First install [autopep8](https://pypi.org/project/autopep8/) `$ pip3 install aut
 `$ autopep8 <filename>`. Best include `autopep8` in your editor to format the code on save automatically.
 
 ### Tests
+Assuming you use the virtual env run all unit tests by calling the following command:
 
 ```bash
-$ python3 tests/test_argument_parser.py
-$ python3 tests/test_more_voices.py
-$ python3 tests/test_integration.py
+(mtp_venv) $ python -m unittest discover -s tests/ -p 'test*.py'
 ```
 
 ### Available fixtures
