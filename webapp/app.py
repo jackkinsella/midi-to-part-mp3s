@@ -74,6 +74,13 @@ def midi_to_mp3():
             music_xml)
     ))
 
+    output_folder, argument_list = _create_argument_list(midi_file_path, soprano_tracks, alto_tracks, tenor_tracks, bass_tracks, instrument_id, random_folder_name)
+    print('Starting midi_to_part_mp3s with parameter list: %s' % argument_list)
+    midi_to_part_mp3s.main(argument_list)
+
+    return _send_zip_file(random_folder_name, output_folder)
+
+def _create_argument_list(midi_file_path: str, soprano_tracks, alto_tracks, tenor_tracks, bass_tracks, instrument_id, random_folder_name) -> List[str]:
     argument_list: List[str] = [midi_file_path]
     _list_append_track_id(argument_list, SOPRANO, soprano_tracks)
     _list_append_track_id(argument_list, ALTO, alto_tracks)
@@ -83,10 +90,10 @@ def midi_to_mp3():
 
     output_folder = '%s/%s' % (random_folder_name, OUTPUT_FOLDER)
     _single_append_argument(argument_list, OUTPUT, output_folder)
-    print('Starting midi_to_part_mp3s with parameter list: %s' % argument_list)
-    midi_to_part_mp3s.main(argument_list)
+    return output_folder, argument_list
 
-    zip_file_name = '%s/%s' % (random_folder_name, FILENAME)
+def _send_zip_file(folder_to_zip: str, output_folder: str):
+    zip_file_name = '%s/%s' % (folder_to_zip, FILENAME)
     print ('Creating zip file: %s' % zip_file_name)
     with ZipFile(zip_file_name, 'w') as myzip:
         for file_name in os.listdir(output_folder):

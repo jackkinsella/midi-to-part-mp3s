@@ -1,4 +1,4 @@
-$(function() {
+$(function () {
     'use strict';
     // Drop Zone from https://bootsnipp.com/snippets/D7MvX
     // UPLOAD CLASS DEFINITION
@@ -7,7 +7,7 @@ $(function() {
     var dropZone = document.getElementById('drop-zone');
     var uploadForm = document.getElementById('js-upload-form');
 
-    var startUpload = function() {
+    var startUpload = function () {
         $('#js-upload-submit').prop('disabled', true)
         console.log($('#js-upload-form')[0])
         let formData = new FormData($('#js-upload-form')[0]);
@@ -19,8 +19,8 @@ $(function() {
             contentType: false,
             cache: false,
             processData: false,
-            success: function(data) {
-                var obj = JSON.parse(data);
+            success: function (response) {
+                var obj = JSON.parse(response);
                 $('#score-view').text('')
                 var osmd = new opensheetmusicdisplay.OpenSheetMusicDisplay("score-view");
                 window.musicXml = obj.musicxml
@@ -35,94 +35,108 @@ $(function() {
                         '<input type="hidden" name="trackId" value="' + i + '"></li>');
                 }
             },
-            error: function(data){
+            error: function (data) {
                 $('#js-upload-submit').prop('disabled', false)
             }
         });
     }
 
-    uploadForm.addEventListener('submit', function(e) {
+    uploadForm.addEventListener('submit', function (event) {
         var uploadFiles = document.getElementById('js-upload-files').files;
-        e.preventDefault()
+        event.preventDefault()
 
         startUpload()
     })
 
-    dropZone.ondrop = function(e) {
-        e.preventDefault();
+    dropZone.ondrop = function (event) {
+        event.preventDefault();
         this.className = 'upload-drop-zone';
-        document.getElementById('js-upload-files').files = e.dataTransfer.files
+        document.getElementById('js-upload-files').files = event.dataTransfer.files
 
         startUpload()
     }
 
-    dropZone.ondragover = function() {
+    dropZone.ondragover = function () {
         this.className = 'upload-drop-zone drop';
         return false;
     }
 
-    dropZone.ondragleave = function() {
+    dropZone.ondragleave = function () {
         this.className = 'upload-drop-zone';
         return false;
     }
 
-    $('#btDownload').click(function() {
+    $('#btDownload').click(function () {
         $(this).prop('disabled', true);
 
         // Triggering file download from here: http://www.alexhadik.com/blog/2016/7/7/l8ztp8kr5lbctf5qns4l8t3646npqh
         let url = 'download'
         let downloadFormData = new FormData();
-        $("#soprano-tracks :input").each(function(i, val) { downloadFormData.append('soprano', val.value) })
-        $("#alto-tracks :input").each(function(i, val) { downloadFormData.append('alto', val.value) })
-        $("#tenor-tracks :input").each(function(i, val) { downloadFormData.append('tenor', val.value) })
-        $("#bass-tracks :input").each(function(i, val) { downloadFormData.append('bass', val.value) })
+        $("#soprano-tracks :input").each(function (i, val) { downloadFormData.append('soprano', val.value) })
+        $("#alto-tracks :input").each(function (i, val) { downloadFormData.append('alto', val.value) })
+        $("#tenor-tracks :input").each(function (i, val) { downloadFormData.append('tenor', val.value) })
+        $("#bass-tracks :input").each(function (i, val) { downloadFormData.append('bass', val.value) })
         if ($('#instrument-selector option:selected').val() != '-1') {
             downloadFormData.append('instrument', $('#instrument-selector option:selected').val())
         }
         downloadFormData.append('musicxml', window.musicXml)
-        let xhr = new XMLHttpRequest();
-        //set the request type to post and the destination url to '/convert'
-        xhr.open('POST', url);
-        //set the reponse type to blob since that's what we're expecting back
-        xhr.responseType = 'blob';
-        xhr.send(downloadFormData);
-        xhr.onload = function(e) {
-            if (this.status == 200) {
-                // Create a new Blob object using the 
-                //response data of the onload object
-                var blob = new Blob([this.response], { type: 'application/zip' });
-                //Create a link element, hide it, direct 
-                //it towards the blob, and then 'click' it programatically
-                let a = document.createElement("a");
-                a.style = "display: none";
-                document.body.appendChild(a);
-                //Create a DOMString representing the blob 
-                //and point the link element towards it
-                let url = window.URL.createObjectURL(blob);
-                a.href = url;
-                a.download = 'part-mp3s.zip';
-                //programatically click the link to trigger the download
-                a.click();
-                //release the reference to the file by revoking the Object URL
-                window.URL.revokeObjectURL(url);
-            } else {
-                //deal with your error state here
+        $.ajax(
+            {
+                type: "POST",
+                url: url,
+                dataType: 'blob',
+                data: downloadFormData,
+                enctype: 'multipart/form-data',
+                contentType: false,
+                cache: false,
+                processData: false,
+                done: function (response) {
+                    createBlobAndTriggerDownload(response, 'part-mp3s.zip', 'application/zip')
+                },
+                fail: function (jqXHR, textStatus, errorThrown) {
+                    $('#errorMessage').text("The download could not be initiated (HTTP error code " + jqXHR.status + ", text status '" + textStatus + "')")
+                },
+                always: function () {
+                    $('#btDownload').prop('disabled', false);
+                }
             }
-            $('#btDownload').prop('disabled', false);
-        };
+        );
     });
 });
 
-function allowDrop(ev) {
-    ev.preventDefault();
+/**
+ * Encapsulates the feature to trigger a download for a blob object.
+ * 
+ * Constructs a blob object utilizing the response data of the onload object.
+ * This done using a "virtual" html link element that is hidden and clicked programmatically.
+ * 
+ * By encapsulating the blob in a DOMString and pointing the link to it,
+ * the browser will react as if clicked on a regular file download link.
+ * 
+ * Source: http://www.alexhadik.com/blog/2016/7/7/l8ztp8kr5lbctf5qns4l8t3646npqh
+ */
+function createBlobAndTriggerDownload(response, fileName, mediaType) {
+    var blob = new Blob([response], { type: mediaType });
+    let a = document.createElement("a");
+    a.style = "display: none";
+    document.body.appendChild(a);
+    let url = window.URL.createObjectURL(blob);
+    a.href = url;
+    a.download = fileName;
+    a.click();
+    window.URL.revokeObjectURL(url);
 }
 
-function drag(ev) {
-    ev.dataTransfer.setData("text", ev.target.id);
+function allowDrop(event) {
+    event.preventDefault();
 }
 
-function drop(ev) {
-    ev.preventDefault();
-    let data = ev.dataTransfer.getData("text");
-    ev.target.appendChild(document.getElementById(data));
+function drag(event) {
+    event.dataTransfer.setData("text", event.target.id);
+}
+
+function drop(event) {
+    event.preventDefault();
+    let data = event.dataTransfer.getData("text");
+    event.target.appendChild(document.getElementById(data));
 }

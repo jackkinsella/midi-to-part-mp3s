@@ -111,7 +111,7 @@ Test to convert a midi and download it:
 `curl -X GET -v -F soprano=1 -F alto=2 -F alto=3 -F tenor=4 -F bass=5 -F instrument=1 -F file=@tests/fixtures/Brahms-Da-unten-im-Tale.mid http://127.0.0.1:5000/download > output.zip`
 
 ### Run web app in Docker
-Install Docker (community)[https://www.docker.com/docker-community] edition for your system
+Install [Docker (community) edition](https://www.docker.com/docker-community) for your system
 
 Build the docker container:
 `docker build --tag=midi-to-part-mp3 .`

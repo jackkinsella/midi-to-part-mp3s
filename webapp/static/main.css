@@ -30,3 +30,7 @@
 [draggable=true] {
     cursor: move;
 }
+
+#errorMessage{
+    color: red;
+}
