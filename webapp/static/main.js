@@ -84,19 +84,20 @@ $(function () {
             {
                 type: "POST",
                 url: url,
-                dataType: 'blob',
                 data: downloadFormData,
                 enctype: 'multipart/form-data',
                 contentType: false,
                 cache: false,
                 processData: false,
-                done: function (response) {
-                    createBlobAndTriggerDownload(response, 'part-mp3s.zip', 'application/zip')
+                xhrFields:{
+                    responseType: 'blob'
                 },
-                fail: function (jqXHR, textStatus, errorThrown) {
+                success: function (data) {
+                    createBlobAndTriggerDownload(data, 'part-mp3s.zip', 'application/zip')
+                    $('#btDownload').prop('disabled', false);
+                },
+                error: function (jqXHR, textStatus) {
                     $('#errorMessage').text("The download could not be initiated (HTTP error code " + jqXHR.status + ", text status '" + textStatus + "')")
-                },
-                always: function () {
                     $('#btDownload').prop('disabled', false);
                 }
             }

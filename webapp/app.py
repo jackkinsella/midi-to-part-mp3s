@@ -81,7 +81,7 @@ def midi_to_mp3():
     return _send_zip_file(random_folder_name, output_folder)
 
 def _create_argument_list(midi_file_path: str, soprano_tracks, alto_tracks, tenor_tracks, bass_tracks, instrument_id, random_folder_name) -> List[str]:
-    argument_list: List[str] = [midi_file_path]
+    argument_list: List[str] = ['-f', midi_file_path]
     _list_append_track_id(argument_list, SOPRANO, soprano_tracks)
     _list_append_track_id(argument_list, ALTO, alto_tracks)
     _list_append_track_id(argument_list, TENOR, tenor_tracks)
