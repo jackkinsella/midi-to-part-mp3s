@@ -107,8 +107,7 @@ Assuming you use the virtual env run all unit tests by calling the following com
 Start the application in development mode (will reload automatically on code changes):
 `$ FLASK_APP=webapp/app.py FLASK_DEBUG=1 flask run`
 
-Test to convert a midi and download it:
-`curl -X GET -v -F soprano=1 -F alto=2 -F alto=3 -F tenor=4 -F bass=5 -F instrument=1 -F file=@tests/fixtures/Brahms-Da-unten-im-Tale.mid http://127.0.0.1:5000/download > output.zip`
+Open the url http://127.0.0.1:5000/ in a browser. Code changes will be reloaded automatically.
 
 ### Run web app in Docker
 Install [Docker (community) edition](https://www.docker.com/docker-community) for your system
