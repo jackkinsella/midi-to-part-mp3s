@@ -3,7 +3,7 @@ import argparse
 import os
 import sys
 import shutil
-from typing import List, Dict
+from typing import List
 
 import sox  # type: ignore
 import mido  # type: ignore

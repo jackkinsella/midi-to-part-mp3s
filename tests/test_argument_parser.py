@@ -1,11 +1,10 @@
 import midi_to_part_mp3s
 import unittest
-import shutil
 import argparse
-import os
 from typing import List
 
-# allow to import modules from parent dir (https://stackoverflow.com/a/33532002/2641951)
+# allow to import modules from parent dir
+# (https://stackoverflow.com/a/33532002/2641951)
 from inspect import getsourcefile
 import os.path as path
 import sys
