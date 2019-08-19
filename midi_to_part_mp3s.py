@@ -107,7 +107,7 @@ def generate_solo_parts(midi_data: mido.MidiFile, track_numbers: List[int],
         Part -- generated Part object
     """
     midi: mido.MidiFile = mido.MidiFile()
-    midi.ticks_per_beat: int = midi_data.ticks_per_beat
+    midi.ticks_per_beat = midi_data.ticks_per_beat
 
     track_number: int
     for track_number in track_numbers:
