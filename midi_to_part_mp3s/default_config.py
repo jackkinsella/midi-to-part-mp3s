@@ -1,4 +1,4 @@
-from custom_types import ConfigType
+from midi_to_part_mp3s.custom_types import ConfigType
 
 default_config: ConfigType = {
     "alto": [2],

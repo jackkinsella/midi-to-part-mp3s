@@ -1,10 +1,9 @@
-#!/usr/bin/env python3
 import argparse
-import sys
 
-import midi_to_part_mp3s
-from custom_types import ConfigType, VoiceStringsType
-from default_config import default_config
+from midi_to_part_mp3s.custom_types import ConfigType, VoiceStringsType
+from midi_to_part_mp3s.default_config import default_config
+from midi_to_part_mp3s.splitter import Splitter
+from typing import List
 
 
 def help_string_for_voice(voice: VoiceStringsType):
@@ -72,7 +71,14 @@ def get_parser() -> argparse.ArgumentParser:
     return parser
 
 
-if __name__ == "__main__":
-    parsed_args = get_parser().parse_args(sys.argv[1:])
+# TODO: Add types for argv
+# TODO2: Maybe combine with main method once working again
+def parse_and_set_defaults(argv: List) -> ConfigType:
+    parsed_args = get_parser().parse_args(argv)
     config: ConfigType = {**default_config, **vars(parsed_args)}
-    midi_to_part_mp3s.split(config)
+    return config
+
+
+def main(argv: List) -> None:
+    config = parse_and_set_defaults(argv)
+    Splitter(config).split()

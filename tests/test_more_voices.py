@@ -1,21 +1,16 @@
-import midi_to_part_mp3s
+from midi_to_part_mp3s.default_config import default_config
+from midi_to_part_mp3s.cli import main
+
 import unittest
 import shutil
 import os
 from typing import List
 
-# allow to import modules from parent dir (https://stackoverflow.com/a/33532002/2641951)
-from inspect import getsourcefile
-import os.path as path
-import sys
-current_dir = path.dirname(path.abspath(getsourcefile(lambda: 0)))
-sys.path.insert(0, current_dir[:current_dir.rfind(path.sep)])
-
 
 class TestMoreVoices(unittest.TestCase):
     def _cleanup_output_dir(self):
-        if os.path.exists(midi_to_part_mp3s.output_directory):
-            shutil.rmtree(midi_to_part_mp3s.output_directory)
+        if os.path.exists(default_config["output_directory"]):
+            shutil.rmtree(default_config["output_directory"])
 
     def setUp(self):
         self._cleanup_output_dir()
@@ -69,8 +64,8 @@ class TestMoreVoices(unittest.TestCase):
 
     def _simple_file_list_check(self, arguments: List[str],
                                 expected_filenames: List[str]):
-        midi_to_part_mp3s.main(arguments)
-        filenames: List[str] = os.listdir(midi_to_part_mp3s.output_directory)
+        main(arguments)
+        filenames: List[str] = os.listdir(default_config["output_directory"])
         self.assertCountEqual(filenames, expected_filenames)
 
 

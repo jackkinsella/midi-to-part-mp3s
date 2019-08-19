@@ -7,9 +7,9 @@ import sox  # type: ignore
 import mido  # type: ignore
 import music21  # type: ignore
 
-from custom_types import ConfigType, VoiceStringsType
-from part import Part
-from file_format_converters import check_format
+from midi_to_part_mp3s.custom_types import ConfigType, VoiceStringsType
+from midi_to_part_mp3s.part import Part
+from midi_to_part_mp3s.file_format_converters import check_format
 
 sung_parts: List[VoiceStringsType] = ['soprano', 'alto', 'bass', 'tenor']
 
@@ -18,7 +18,14 @@ class Splitter:
     def __init__(self, config: ConfigType):
         self.config = config
 
-    def separate_tracks_into_mp3s(self, midifile_path: str) -> None:
+    def split(self):
+        output_directory = self.config["output_directory"]
+        prepare_output_directory(output_directory)
+        converted_midi_file_path = check_format(self.config["file_path"], output_directory)
+        self.__separate_tracks_into_mp3s(converted_midi_file_path)
+        cleanup(output_directory)
+
+    def __separate_tracks_into_mp3s(self, midifile_path: str) -> None:
         midi_data: mido.MidiFile = self.__ensure_midi_well_formatted(
             mido.MidiFile(midifile_path))
         solo_parts: List[Part] = []
@@ -202,11 +209,3 @@ def prepare_output_directory(output_directory: str) -> None:
         shutil.rmtree(output_directory)
 
     os.makedirs(output_directory)
-
-
-def split(config: ConfigType):
-    output_directory = config["output_directory"]
-    prepare_output_directory(output_directory)
-    converted_midi_file_path = check_format(config["file_path"], output_directory)
-    Splitter(config).separate_tracks_into_mp3s(converted_midi_file_path)
-    cleanup(output_directory)

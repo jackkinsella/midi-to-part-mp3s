@@ -1,10 +1,12 @@
+from midi_to_part_mp3s.default_config import default_config
+
 import unittest
 import os
 import shutil
 
 import sox  # type: ignore
 
-output_directory = "./output"
+output_directory = default_config["output_directory"]
 
 
 def audio_length(mp3_filepath):
