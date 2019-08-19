@@ -20,29 +20,34 @@ def get_parser() -> argparse.ArgumentParser:
         "-s",
         "--soprano",
         type=convert_to_list,
+        default=default_config["soprano"],
         help=help_string_for_voice("soprano")
     )
     parser.add_argument(
         "-a",
         "--alto",
         type=convert_to_list,
+        default=default_config["alto"],
         help=help_string_for_voice("alto")
     )
     parser.add_argument(
         "-t",
         "--tenor",
         type=convert_to_list,
+        default=default_config["tenor"],
         help=help_string_for_voice("tenor")
     )
     parser.add_argument(
         "-b",
         "--bass",
         type=convert_to_list,
+        default=default_config["bass"],
         help=help_string_for_voice("bass")
     )
     parser.add_argument(
         "-in",
         "--instrument",
+        default=default_config["instrument"],
         type=int,
         help=('instrument for voices. Defaults to "49"'))
     parser.add_argument("-iv",
@@ -56,7 +61,7 @@ def get_parser() -> argparse.ArgumentParser:
           appear in all accompaniment mp3s e.g. piano or orchestra',
                         nargs='+',
                         type=int,
-                        default=[])
+                        default=default_config["instrumental_accompaniment"])
     required_named = parser.add_argument_group('mandatory argument')
     required_named.add_argument(
         "-f",
