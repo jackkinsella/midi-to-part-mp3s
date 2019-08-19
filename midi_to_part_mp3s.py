@@ -23,7 +23,8 @@ args = None
 
 
 class Part:
-    def __init__(self, name: str = '', midi: str = '', midi_filepath: str = ''):
+    def __init__(self, name: str = '', midi: str = '',
+                 midi_filepath: str = ''):
         self.name = name
         self.midi = midi
         self.midi_filepath = midi_filepath
@@ -134,9 +135,9 @@ def convert_midi_to_mp3(midifile_path: str) -> None:
     """
     output_base_filename = os.path.splitext(midifile_path)[0]
     # TODO: Hide output unless debug option on... probably need subprocess.run
-    os.system("fluidsynth -r 44100 -R 1 -E little -T raw -F - -O s16 '{}' '{}' | lame --signed -s 44100 -r - '{}.mp3'".format(
-        soundfont_path, midifile_path, output_base_filename
-    ))
+    os.system(
+        "fluidsynth -r 44100 -R 1 -E little -T raw -F - -O s16 '{}' '{}' | lame --signed -s 44100 -r - '{}.mp3'"
+        .format(soundfont_path, midifile_path, output_base_filename))
 
 
 def change_instrument(midi_data: mido.MidiFile, program_number: int):
@@ -156,8 +157,8 @@ def change_instrument(midi_data: mido.MidiFile, program_number: int):
                 found = True
                 message.program = program_number
         if not found:
-            program_change_message = mido.Message(
-                'program_change', program=program_number)
+            program_change_message = mido.Message('program_change',
+                                                  program=program_number)
             track.insert(0, program_change_message)
 
 
@@ -231,15 +232,16 @@ def ensure_midi_well_formatted(midi_data: mido.MidiFile) -> mido.MidiFile:
         return separate_out_tempo_map(midi_data)
 
 
-def separate_tracks_into_mp3s(args: argparse.Namespace, midifile_path: str) -> None:
+def separate_tracks_into_mp3s(args: argparse.Namespace,
+                              midifile_path: str) -> None:
     midi_data: mido.MidiFile = ensure_midi_well_formatted(
         mido.MidiFile(midifile_path))
     solo_parts: List[Part] = []
     voices: list = create_voices()
     add_accompaniment(voices)
     for part_name, track_numbers, instrument in voices:
-        solo_part: Part = generate_solo_parts(
-            midi_data, track_numbers, part_name, instrument)
+        solo_part: Part = generate_solo_parts(midi_data, track_numbers,
+                                              part_name, instrument)
         solo_parts.append(solo_part)
 
     part: Part
@@ -260,14 +262,14 @@ def create_voices() -> list:
     sung_part: str
     for sung_part in sung_parts:
         voice_midi_tracks = vars(args)[sung_part]
-        if(voice_midi_tracks):
+        if (voice_midi_tracks):
             for i in range(len(voice_midi_tracks)):
                 tracks = []
                 track_id = voice_midi_tracks[i]
                 tracks.append(tempo_map_track_number)
                 tracks.append(track_id)
                 instrument = instrument_number_for_part(sung_part)
-                voice = [sung_part + ' ' + str(i+1), tracks, instrument]
+                voice = [sung_part + ' ' + str(i + 1), tracks, instrument]
                 voices.append(voice)
     return voices
 
@@ -279,8 +281,10 @@ def add_accompaniment(voices: list) -> None:
         voices {list} -- list of voices and their assigned midi track numbers
     """
     if args.instrumental_accompaniment:
-        voices.append(
-            ['accompaniment', args.instrumental_accompaniment + args.common_solo_tracks, None])
+        voices.append([
+            'accompaniment',
+            args.instrumental_accompaniment + args.common_solo_tracks, None
+        ])
 
 
 def cleanup() -> None:
@@ -316,8 +320,8 @@ def set_defaults(args: argparse.Namespace) -> None:
     Returns:
         None -- The args will be overwritten in the original args object
     """
-    if (args.soprano == None and args.alto == None and
-            args.tenor == None and args.bass == None):
+    if (args.soprano == None and args.alto == None and args.tenor == None
+            and args.bass == None):
         args.soprano = [1]
         args.alto = [2]
         args.tenor = [3]
@@ -335,25 +339,50 @@ def set_defaults(args: argparse.Namespace) -> None:
 
 def get_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser()
-    parser.add_argument("-s", "--soprano", type=str,
-                        help='comma separated list of midi track IDs, defaults to "1"')
-    parser.add_argument("-a", "--alto", type=str,
-                        help='comma separated list of midi track IDs, defaults to "2"')
-    parser.add_argument("-t", "--tenor", type=str,
-                        help='comma separated list of midi track IDs, defaults to "3"')
-    parser.add_argument("-b", "--bass", type=str,
-                        help='comma separated list of midi track IDs, defaults to "4"')
-    parser.add_argument("-in", "--instrument", type=int,
-                        help=('instrument that should be used for all voices instead \
+    parser.add_argument(
+        "-s",
+        "--soprano",
+        type=str,
+        help='comma separated list of midi track IDs, defaults to "1"')
+    parser.add_argument(
+        "-a",
+        "--alto",
+        type=str,
+        help='comma separated list of midi track IDs, defaults to "2"')
+    parser.add_argument(
+        "-t",
+        "--tenor",
+        type=str,
+        help='comma separated list of midi track IDs, defaults to "3"')
+    parser.add_argument(
+        "-b",
+        "--bass",
+        type=str,
+        help='comma separated list of midi track IDs, defaults to "4"')
+    parser.add_argument(
+        "-in",
+        "--instrument",
+        type=int,
+        help=('instrument that should be used for all voices instead \
                               of the advice given at cpdl.org'))
-    parser.add_argument("-iv", "--instrumental-volume",
-                        help="configure instrumental volume", type=float, default=2.0)
-    parser.add_argument("-i", "--instrumental-accompaniment", help='midi tracks that \
-          appear in all accompaniment mp3s e.g. piano or orchestra', nargs='+',
-                        type=int, default=[])
+    parser.add_argument("-iv",
+                        "--instrumental-volume",
+                        help="configure instrumental volume",
+                        type=float,
+                        default=2.0)
+    parser.add_argument("-i",
+                        "--instrumental-accompaniment",
+                        help='midi tracks that \
+          appear in all accompaniment mp3s e.g. piano or orchestra',
+                        nargs='+',
+                        type=int,
+                        default=[])
     requiredNamed = parser.add_argument_group('mandatory argument')
-    requiredNamed.add_argument("-f", "--file-path", required=True,
-                               help='Input file to generate the tracks from. Can be Midi or \
+    requiredNamed.add_argument(
+        "-f",
+        "--file-path",
+        required=True,
+        help='Input file to generate the tracks from. Can be Midi or \
                             MusicXML (.mid, .midi, .mxl, .musicxml)')
     return parser
 

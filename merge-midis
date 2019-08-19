@@ -11,11 +11,9 @@ parser.add_argument("-t", "--tenor", default='tenor.mid')
 parser.add_argument("-b", "--bass", default='bass.mid')
 args = parser.parse_args()
 
-
-solo_midi_files = list(map(lambda
-                           midifile_path: mido.MidiFile(midifile_path),
-                           [args.soprano, args.alt, args.tenor, args.bass]
-                           ))
+solo_midi_files = list(
+    map(lambda midifile_path: mido.MidiFile(midifile_path),
+        [args.soprano, args.alt, args.tenor, args.bass]))
 
 output_midi = mido.MidiFile()
 output_midi.ticks_per_beat = solo_midi_files[0].ticks_per_beat
