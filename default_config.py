@@ -4,7 +4,7 @@ default_config: ConfigType = {
     "alto": [2],
     "bass": [4],
     "file_path": '',
-    "instrument": 49,
+    "instrument": 0,
     "instrumental_accompaniment": [],
     "instrumental_volume": 2.0,
     "output_directory": "./output",
