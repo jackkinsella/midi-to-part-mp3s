@@ -12,6 +12,7 @@ VoicesObjectType = TypedDict('VoicesObjectType', {
 })
 
 ConfigType = TypedDict('ConfigType', {
+    'compress_dynamic_range': bool,
     'file_path': str,
     'instrument': int,
     'instrumental_accompaniment': List[int],

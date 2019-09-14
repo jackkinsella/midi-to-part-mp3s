@@ -1,6 +1,7 @@
 from midi_to_part_mp3s.custom_types import ConfigType
 
 default_config: ConfigType = {
+    "compress_dynamic_range": True,
     "file_path": '',
     "instrument": 0,
     "instrumental_accompaniment": [],

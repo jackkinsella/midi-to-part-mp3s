@@ -87,6 +87,13 @@ def get_parser() -> argparse.ArgumentParser:
         help=('Soundfont path. Changing this gives you new sounds')
     )
     parser.add_argument(
+        "-c",
+        "--compress-dynamic-range",
+        action='store_true',
+        default=default_config["compress_dynamic_range"],
+        help="Gets rid of extreme differences in volume"
+    )
+    parser.add_argument(
         "-v",
         "--verbose",
         action='store_true',

@@ -7,6 +7,7 @@ import sox  # type: ignore
 import mido  # type: ignore
 import music21  # type: ignore
 
+from midi_to_part_mp3s.dynamic_range_compression import compress_dynamic_range
 from midi_to_part_mp3s.custom_types import ConfigType, VoiceStringsType
 from midi_to_part_mp3s.part import Part
 from midi_to_part_mp3s.file_format_converters import check_format
@@ -27,7 +28,12 @@ class Splitter:
 
     def __separate_tracks_into_mp3s(self, midifile_path: str) -> None:
         midi_data: mido.MidiFile = self.__ensure_midi_well_formatted(
-            mido.MidiFile(midifile_path))
+            mido.MidiFile(midifile_path)
+        )
+
+        if self.config["compress_dynamic_range"]:
+            midi_data = compress_dynamic_range(midi_data)
+
         solo_parts: List[Part] = []
         voices: list = self.__create_voices()
         self.__add_accompaniment(voices)
