@@ -28,7 +28,7 @@ otherwise you'll find that a 5 minute track might be over in 1 minute.
 
 By default, track 0 of the midi is set to time signatures, and tracks 1-4 are set to SATB respectively. These defaults are used with:
 
-`$ ./midi-to-part-mp3s /Downloads/my-midi.mid`
+`$ ./bin/midi-to-part-mp3s -f /Downloads/my-midi.mid`
 
 The mp3 files will appear in the folder `$ ./output`.
 
@@ -37,31 +37,12 @@ The mp3 files will appear in the folder `$ ./output`.
 To customize which input tracks are assigned to which voices and certain volume ratios.
 
 ```bash
-usage: midi-to-part-mp3s [-h]
-                         [-csts COMMON_SOLO_TRACKS [COMMON_SOLO_TRACKS ...]]
-                         [-s SOPRANO] [-a ALT] [-t TENOR] [-b BASS]
-                         [-iv INSTRUMENTAL_VOLUME]
+usage: midi-to-part-mp3s -f FILE_PATH 
+                         [-h] [-s SOPRANO] [-a ALTO] [-t TENOR] [-b BASS]
+                         [-in INSTRUMENT] [-iv INSTRUMENTAL_VOLUME]
                          [-i INSTRUMENTAL_ACCOMPANIMENT [INSTRUMENTAL_ACCOMPANIMENT ...]]
-                         midifile_path
-
-positional arguments:
-  midifile_path
-
-optional arguments:
-  -h, --help            show this help message and exit
-  -csts COMMON_SOLO_TRACKS [COMMON_SOLO_TRACKS ...], --common-solo-tracks COMMON_SOLO_TRACKS [COMMON_SOLO_TRACKS ...]
-                        midi tracks that must appear in all solo mp3s e.g.
-                        because they contain time signature changes
-  -s SOPRANO, --soprano SOPRANO
-  -a ALT, --alt ALT
-  -t TENOR, --tenor TENOR
-  -b BASS, --bass BASS
-  -iv INSTRUMENTAL_VOLUME, --instrumental-volume INSTRUMENTAL_VOLUME
-                        configure instrumental volume
-  -i INSTRUMENTAL_ACCOMPANIMENT [INSTRUMENTAL_ACCOMPANIMENT ...], --instrumental-accompaniment INSTRUMENTAL_ACCOMPANIMENT [INSTRUMENTAL_ACCOMPANIMENT ...]
-                        midi tracks that appear in all accompaniment mp3s e.g.
-                        piano or orchestra
-
+                         [-o OUTPUT_DIRECTORY]
+                         [-sf SOUNDFONT_PATH] [-v]
 ```
 
 ## Development
