@@ -1,3 +1,4 @@
+import context
 from midi_to_part_mp3s.cli import parse_and_set_defaults
 
 import unittest

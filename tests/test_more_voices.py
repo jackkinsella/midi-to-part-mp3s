@@ -1,3 +1,4 @@
+import context
 from midi_to_part_mp3s.default_config import default_config
 from midi_to_part_mp3s.cli import main
 

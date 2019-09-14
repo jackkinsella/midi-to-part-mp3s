@@ -59,7 +59,7 @@ class Splitter:
         tempo_map_track_number = 0
         sung_part: VoiceStringsType
         for sung_part in sung_parts:
-            voice_midi_tracks = self.config[sung_part]
+            voice_midi_tracks = self.config["voices"][sung_part]
             if (voice_midi_tracks):
                 for i in range(len(voice_midi_tracks)):
                     tracks = []
