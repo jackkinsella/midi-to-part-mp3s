@@ -1,4 +1,5 @@
 import os
+import subprocess
 
 
 class Part:
@@ -20,10 +21,22 @@ class Part:
             None -- does not return anything. The file is created on the file system using fluidsynth
         """
         output_base_filename = os.path.splitext(midifile_path)[0]
-        # TODO: Hide output unless debug option on... probably need subprocess.run
-        os.system(
-            "fluidsynth -r 44100 -R 1 -E little -T raw -F - -O s16 '{}' '{}' | lame --signed -s 44100 -r - '{}.mp3'"
-            .format(soundfont_path, midifile_path, output_base_filename))
+
+        print("Converting {}".format(self.name))
+
+        fluidsynth_process = subprocess.Popen(
+            [
+                "fluidsynth", "-r", "44100", "-R", "1", "-E", "little",  "-T",
+                "raw", "-F", "-", "-O", "s16", soundfont_path, midifile_path
+            ], stdout=subprocess.PIPE)
+
+        # TODO: Show output if debug config on
+        lame_process = subprocess.Popen([
+            "lame", "--preset", "standard", "-r", '-', "{}.mp3".format(output_base_filename)
+        ], stdin=fluidsynth_process.stdout, stdout=subprocess.DEVNULL,
+            # Due to a quick with `lame`, the normal output goes to stderr...
+            stderr=subprocess.DEVNULL)
+        fluidsynth_process.wait()
 
     def mp3_filepath(self) -> str:
         return self.midi_filepath.replace(".midi", ".mp3")
