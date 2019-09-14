@@ -18,4 +18,5 @@ ConfigType = TypedDict('ConfigType', {
     'instrumental_volume': float,
     "output_directory": str,
     'soundfont_path': str,
+    'verbose': bool,
     'voices': VoicesObjectType})

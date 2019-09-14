@@ -7,6 +7,7 @@ default_config: ConfigType = {
     "instrumental_volume": 2.0,
     "output_directory": "./output",
     "soundfont_path": "./soundfonts/timbres-of-heaven.sf2",
+    "verbose": False,
     "voices": {
         "alto": [2],
         "bass": [4],

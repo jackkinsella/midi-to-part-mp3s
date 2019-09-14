@@ -86,6 +86,13 @@ def get_parser() -> argparse.ArgumentParser:
         default=default_config["soundfont_path"],
         help=('Soundfont path. Changing this gives you new sounds')
     )
+    parser.add_argument(
+        "-v",
+        "--verbose",
+        action='store_true',
+        default=default_config["verbose"],
+        help=('Print detailed debugging information')
+    )
     return parser
 
 
@@ -118,6 +125,9 @@ def convert_cli_args_to_internal_config(argv: List) -> ConfigType:
     del config["bass"]
     del config["soprano"]
     del config["tenor"]
+
+    if config["verbose"]:
+        print("Parsed config:", config)
 
     return config
 
