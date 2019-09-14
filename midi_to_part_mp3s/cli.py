@@ -53,6 +53,13 @@ def get_parser() -> argparse.ArgumentParser:
         help=('instrument for voices. Defaults to "49"')
     )
     parser.add_argument(
+        "-av",
+        "--accompaniment-volume-ratio",
+        help="ratio of how loud accompanying voices should be in the accompaniment tracks",
+        type=float,
+        default=default_config["accompaniment_volume_ratio"]
+    )
+    parser.add_argument(
         "-iv",
         "--instrumental-volume",
         help="configure instrumental volume",

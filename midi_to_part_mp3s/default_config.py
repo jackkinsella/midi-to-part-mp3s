@@ -1,6 +1,7 @@
 from midi_to_part_mp3s.custom_types import ConfigType
 
 default_config: ConfigType = {
+    "accompaniment_volume_ratio": 0.28,
     "compress_dynamic_range": True,
     "file_path": '',
     "instrument": 0,

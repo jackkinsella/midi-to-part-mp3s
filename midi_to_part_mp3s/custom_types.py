@@ -12,6 +12,7 @@ VoicesObjectType = TypedDict('VoicesObjectType', {
 })
 
 ConfigType = TypedDict('ConfigType', {
+    "accompaniment_volume_ratio": float,
     'compress_dynamic_range': bool,
     'file_path': str,
     'instrument': int,

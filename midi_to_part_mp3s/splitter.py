@@ -120,7 +120,7 @@ class Splitter:
     def __generate_accompaniment(self, own_part, solo_parts) -> None:
         combiner = sox.Combiner()
 
-        accompaniment_volume_ratio = 0.33
+        accompaniment_volume_ratio = self.config["accompaniment_volume_ratio"]
         instrumental_volume_ratio = accompaniment_volume_ratio * self.config["instrumental_volume"]
         input_volumes = []
         input_files = []
