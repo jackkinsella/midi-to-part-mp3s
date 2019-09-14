@@ -45,6 +45,9 @@ class Splitter:
 
         part: Part
         for part in solo_parts:
+            self.__generate_all_but_one_part_track(part, solo_parts)
+
+        for part in solo_parts:
             self.__generate_accompaniment(part, solo_parts)
 
         self.__generate_full_mp3(solo_parts)
@@ -116,6 +119,16 @@ class Splitter:
                     )
 
         return part
+
+    def __generate_all_but_one_part_track(self, excluded_part, solo_parts) -> None:
+        combiner = sox.Combiner()
+
+        input_files = [part.mp3_filepath() for part in solo_parts if part.name != excluded_part.name]
+
+        output_file_path = "{}/all except {}.mp3".format(
+            self.config["output_directory"], excluded_part.name
+        )
+        combiner.build(input_files, output_file_path, 'mix-power')
 
     def __generate_accompaniment(self, own_part, solo_parts) -> None:
         combiner = sox.Combiner()
