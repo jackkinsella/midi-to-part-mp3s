@@ -173,28 +173,28 @@ class Splitter:
         return not any(event.type == "note_on" for event in track0)
 
     def __separate_out_tempo_map(self, midi_data: mido.MidiFile) -> mido.MidiFile:
-        tempo_map = []
-        track1 = []
+        tempo_map_track = []
+        initial_track = midi_data.tracks[0]
+        rewritten_initial_track = []
 
-        for event in midi_data.tracks[0]:
+        for event in initial_track:
             if event.is_meta:
                 if event.type in ["instrument_name", "key_signature"]:
-                    track1.append(event)
+                    rewritten_initial_track.append(event)
                 else:
-                    track1.append(event)
-                    tempo_map.append(event)
+                    rewritten_initial_track.append(event)
+                    tempo_map_track.append(event)
             else:
-                track1.append(event)
+                rewritten_initial_track.append(event)
 
-        midi = mido.MidiFile()
-        midi.ticks_per_beat = midi_data.ticks_per_beat
-
-        midi.tracks.append(tempo_map)
-        midi.tracks.append(track1)
+        rewritten_midi = mido.MidiFile()
+        rewritten_midi.ticks_per_beat = midi_data.ticks_per_beat
+        rewritten_midi.tracks.append(tempo_map_track)
+        rewritten_midi.tracks.append(rewritten_initial_track)
         for track in midi_data.tracks[1:]:
-            midi.tracks.append(track)
+            rewritten_midi.tracks.append(track)
 
-        return midi
+        return rewritten_midi
 
     def __change_instrument(self, midi_data: mido.MidiFile, program_number: int):
         """Changes the instrument in all tracks of the given midi_data
