@@ -55,9 +55,14 @@ class Splitter:
         self.__generate_full_mp3(solo_parts)
 
     def __ensure_midi_well_formatted(self, midi_data: mido.MidiFile) -> mido.MidiFile:
+        number_of_tracks = len(midi_data.tracks)
+        self.__log(f"Input file has {number_of_tracks} tracks")
+
         if self.__has_separate_tempo_map(midi_data.tracks[0]):
+            self.__log("Separate tempo map detected")
             return midi_data
         else:
+            self.__log("Generating a separate tempo map track")
             return self.__separate_out_tempo_map(midi_data)
 
     def __create_voices(self) -> list:
@@ -211,6 +216,10 @@ class Splitter:
                 program_change_message = mido.Message('program_change',
                                                       program=program_number)
                 track.insert(0, program_change_message)
+
+    def __log(self, message):
+        if self.config["verbose"]:
+            print(message)
 
 
 def cleanup(output_directory: str) -> None:
