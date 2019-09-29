@@ -4,9 +4,7 @@ def compress_dynamic_range(midi_data):
     )
 
 
-def equalize_volume_change_events(midi_data):
-    constant_volume_setting = 64
-
+def equalize_volume_change_events(midi_data, constant_volume_setting=100):
     for track in midi_data.tracks:
         for message in track:
             if message.type == 'control_change' and message.control == 7:
