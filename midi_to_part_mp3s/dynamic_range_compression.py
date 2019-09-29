@@ -22,7 +22,7 @@ def rescale_velocities(midi_data):
 
     for track in midi_data.tracks:
         for message in track:
-            if message.type == 'note_on':
+            if message.type == 'note_on' and message.velocity != 0:
                 rescaled_velocity = int((max_allowed - min_allowed) *
                                         ((message.velocity - min_observed)/(max_observed - min_observed)) + min_allowed)
                 message.velocity = rescaled_velocity

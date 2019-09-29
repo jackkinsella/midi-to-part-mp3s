@@ -27,7 +27,7 @@ class Splitter:
         cleanup(output_directory)
 
     def __separate_tracks_into_mp3s(self, midifile_path: str) -> None:
-        midi_data: mido.MidiFile = self.__ensure_midi_well_formatted(
+        midi_data: mido.MidiFile = self.__ensure_separate_tempo_track(
             mido.MidiFile(midifile_path)
         )
 
@@ -54,7 +54,7 @@ class Splitter:
 
         self.__generate_full_mp3(solo_parts)
 
-    def __ensure_midi_well_formatted(self, midi_data: mido.MidiFile) -> mido.MidiFile:
+    def __ensure_separate_tempo_track(self, midi_data: mido.MidiFile) -> mido.MidiFile:
         number_of_tracks = len(midi_data.tracks)
         self.__log(f"Input file has {number_of_tracks} tracks")
 
@@ -65,6 +65,9 @@ class Splitter:
             self.__log("Generating a separate tempo map track")
             return self.__separate_out_tempo_map(midi_data)
 
+    # FIXME: The naming is confusing. Also the output as list hides the fact
+    # that this produces something structured: {name: "Soprano 1", midi_tracks:
+    # [0, 3], instrument: 0}
     def __create_voices(self) -> list:
         """Creates a nested list of the voices with their assigned midi track number
 
@@ -85,6 +88,7 @@ class Splitter:
                     instrument = self.config["instrument"]
                     voice = [sung_part + ' ' + str(i + 1), tracks, instrument]
                     voices.append(voice)
+        self.__log(f"Voices generated {voices}")
         return voices
 
     def __add_accompaniment(self, voices: list) -> None:
