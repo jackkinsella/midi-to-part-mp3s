@@ -17,9 +17,22 @@ def help_string_for_voice(voice: VoiceStringsType):
     return f'comma separated list of midi track IDs, defaults to "{default}"'
 
 
-def get_parser() -> argparse.ArgumentParser:
-    def convert_to_list(x): return list(map(int, x.split(',')))
+def str2bool(v):
+    if isinstance(v, bool):
+        return v
+    if v.lower() in ('yes', 'true', 't', 'y', '1'):
+        return True
+    elif v.lower() in ('no', 'false', 'f', 'n', '0'):
+        return False
+    else:
+        raise argparse.ArgumentTypeError('Boolean value expected.')
 
+
+def convert_to_list(x):
+    return list(map(int, x.split(',')))
+
+
+def get_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "-s",
@@ -80,6 +93,22 @@ def get_parser() -> argparse.ArgumentParser:
         required=True,
         help='Input file to generate the tracks from. Can be Midi or \
                             MusicXML (.mid, .midi, .mxl, .musicxml)'
+    )
+    parser.add_argument(
+        "-gat",
+        "--generate-accompaniment-tracks",
+        type=str2bool,
+        const=True,
+        nargs='?',
+        help='Generate tracks where the main voice is loud and the others are quiet',
+        default=default_config["generate_accompaniment_tracks"]
+    )
+    parser.add_argument(
+        "-gabot",
+        "--generate-all-but-one-tracks",
+        action='store_true',
+        help='Generate tracks where the main voice is missing and the others are there',
+        default=default_config["generate_all_but_one_tracks"]
     )
     parser.add_argument(
         "-o",

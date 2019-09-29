@@ -44,11 +44,13 @@ class Splitter:
             solo_parts.append(solo_part)
 
         part: Part
-        for part in solo_parts:
-            self.__generate_all_but_one_part_track(part, solo_parts)
+        if self.config["generate_all_but_one_tracks"]:
+            for part in solo_parts:
+                self.__generate_all_but_one_part_track(part, solo_parts)
 
-        for part in solo_parts:
-            self.__generate_accompaniment(part, solo_parts)
+        if self.config["generate_accompaniment_tracks"]:
+            for part in solo_parts:
+                self.__generate_accompaniment(part, solo_parts)
 
         self.__generate_full_mp3(solo_parts)
 

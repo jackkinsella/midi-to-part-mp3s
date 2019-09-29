@@ -4,6 +4,8 @@ default_config: ConfigType = {
     "accompaniment_volume_ratio": 0.28,
     "compress_dynamic_range": True,
     "file_path": '',
+    "generate_accompaniment_tracks": True,
+    "generate_all_but_one_tracks": False,
     "instrument": 0,
     "instrumental_accompaniment": [],
     "instrumental_volume": 2.0,
