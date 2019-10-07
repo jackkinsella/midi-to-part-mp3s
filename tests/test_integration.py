@@ -10,8 +10,8 @@ import sox  # type: ignore
 output_directory = default_config["output_directory"]
 
 
-def audio_length(mp3_filepath):
-    return sox.file_info.duration(mp3_filepath)
+def audio_length(wavfile_path):
+    return sox.file_info.duration(wavfile_path)
 
 
 class TestIntegration(unittest.TestCase):

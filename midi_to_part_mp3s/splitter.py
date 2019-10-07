@@ -8,7 +8,7 @@ import mido  # type: ignore
 import music21  # type: ignore
 
 from midi_to_part_mp3s.midi_dynamic_range_compression import compress_midi_dynamic_range
-from midi_to_part_mp3s.audio_tools import combine_audio_files
+from midi_to_part_mp3s.audio_tools import combine_audio_files, convert_to_mp3
 from midi_to_part_mp3s.custom_types import ConfigType, VoiceStringsType
 from midi_to_part_mp3s.part import Part
 from midi_to_part_mp3s.file_format_converters import check_format
@@ -23,11 +23,12 @@ class Splitter:
     def split(self):
         output_directory = self.config["output_directory"]
         prepare_output_directory(output_directory)
-        converted_midi_file_path = check_format(self.config["file_path"], output_directory)
-        self.__separate_tracks_into_mp3s(converted_midi_file_path)
+        converted_midifile_path = check_format(self.config["file_path"], output_directory)
+        self.__separate_tracks_into_wavs(converted_midifile_path)
+        create_mp3s_from_wavs(output_directory)
         cleanup(output_directory)
 
-    def __separate_tracks_into_mp3s(self, midifile_path: str) -> None:
+    def __separate_tracks_into_wavs(self, midifile_path: str) -> None:
         midi_data: mido.MidiFile = self.__ensure_separate_tempo_track(
             mido.MidiFile(midifile_path)
         )
@@ -53,7 +54,7 @@ class Splitter:
             for part in solo_parts:
                 self.__generate_accompaniment(part, solo_parts)
 
-        self.__generate_full_mp3(solo_parts)
+        self.__generate_full_wav(solo_parts)
 
     def __ensure_separate_tempo_track(self, midi_data: mido.MidiFile) -> mido.MidiFile:
         number_of_tracks = len(midi_data.tracks)
@@ -87,7 +88,8 @@ class Splitter:
                     tracks.append(tempo_map_track_number)
                     tracks.append(track_id)
                     instrument = self.config["instrument"]
-                    voice = [sung_part + ' ' + str(i + 1), tracks, instrument]
+                    name = sung_part if i == 0 else sung_part + ' ' + str(i + 1)
+                    voice = [name, tracks, instrument]
                     voices.append(voice)
         self.__log(f"Voices generated {voices}")
         return voices
@@ -126,16 +128,16 @@ class Splitter:
         new_file_path = "{}/{}.midi".format(self.config["output_directory"], part_name)
         midi.save(new_file_path)
 
-        part = Part(name=part_name, midi=midi, midi_filepath=new_file_path,
+        part = Part(name=part_name, midi=midi, midifile_path=new_file_path,
                     soundfont_path=self.config["soundfont_path"]
                     )
 
         return part
 
     def __generate_all_but_one_part_track(self, excluded_part, solo_parts) -> None:
-        input_files = [part.mp3_filepath() for part in solo_parts if part.name != excluded_part.name]
+        input_files = [part.wavfile_path for part in solo_parts if part.name != excluded_part.name]
 
-        output_file_path = "{}/all except {}.mp3".format(
+        output_file_path = "{}/all except {}.wav".format(
             self.config["output_directory"], excluded_part.name
         )
         combine_audio_files(input_files, output_file_path)
@@ -149,7 +151,7 @@ class Splitter:
             is_own_part = part.name == own_part.name
             is_instrumental = part.name == 'accompaniment'
 
-            input_files.append(part.mp3_filepath())
+            input_files.append(part.wavfile_path)
 
             if is_own_part:
                 input_volumes.append(1.0)
@@ -158,13 +160,13 @@ class Splitter:
             else:
                 input_volumes.append(accompaniment_volume_ratio)
 
-        output_file_path = "{}/{} with accompaniment.mp3".format(
+        output_file_path = "{}/{} with accompaniment.wav".format(
             self.config["output_directory"], own_part.name)
         combine_audio_files(input_files, output_file_path, input_volumes)
 
-    def __generate_full_mp3(self, solo_parts: List[Part]) -> None:
-        input_files = [part.mp3_filepath() for part in solo_parts]
-        output_file_path = "{}/all.mp3".format(self.config["output_directory"])
+    def __generate_full_wav(self, solo_parts: List[Part]) -> None:
+        input_files = [part.wavfile_path for part in solo_parts]
+        output_file_path = "{}/all.wav".format(self.config["output_directory"])
         combine_audio_files(input_files, output_file_path)
 
     def __has_separate_tempo_map(self, track0: mido.midifiles.tracks.MidiTrack) -> bool:
@@ -221,14 +223,9 @@ class Splitter:
 
 
 def cleanup(output_directory: str) -> None:
-    def remove_temporary_midifiles() -> None:
-        midi_file: str
-
-        for midi_file in os.listdir(output_directory):
-            if midi_file.endswith('.midi'):
-                os.unlink(os.path.join(output_directory, midi_file))
-
-    remove_temporary_midifiles()
+    for file in os.listdir(output_directory):
+        if not file.endswith('.mp3'):
+            os.unlink(os.path.join(output_directory, file))
 
 
 def prepare_output_directory(output_directory: str) -> None:
@@ -237,3 +234,9 @@ def prepare_output_directory(output_directory: str) -> None:
         shutil.rmtree(output_directory)
 
     os.makedirs(output_directory)
+
+
+def create_mp3s_from_wavs(directory: str):
+    for file in os.listdir(directory):
+        if file.endswith('.wav'):
+            convert_to_mp3(os.path.join(directory, file))
