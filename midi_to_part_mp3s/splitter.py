@@ -8,7 +8,7 @@ import mido  # type: ignore
 import music21  # type: ignore
 
 from midi_to_part_mp3s.midi_dynamic_range_compression import compress_midi_dynamic_range
-from midi_to_part_mp3s.audio_tools import combine_audio_files
+from midi_to_part_mp3s.audio_tools import combine_audio_files, convert_to_mp3
 from midi_to_part_mp3s.custom_types import ConfigType, VoiceStringsType
 from midi_to_part_mp3s.part import Part
 from midi_to_part_mp3s.file_format_converters import check_format
@@ -25,6 +25,7 @@ class Splitter:
         prepare_output_directory(output_directory)
         converted_midifile_path = check_format(self.config["file_path"], output_directory)
         self.__separate_tracks_into_wavs(converted_midifile_path)
+        create_mp3s_from_wavs(output_directory)
         cleanup(output_directory)
 
     def __separate_tracks_into_wavs(self, midifile_path: str) -> None:
@@ -87,7 +88,8 @@ class Splitter:
                     tracks.append(tempo_map_track_number)
                     tracks.append(track_id)
                     instrument = self.config["instrument"]
-                    voice = [sung_part + ' ' + str(i + 1), tracks, instrument]
+                    name = sung_part if i == 0 else sung_part + ' ' + str(i + 1)
+                    voice = [name, tracks, instrument]
                     voices.append(voice)
         self.__log(f"Voices generated {voices}")
         return voices
@@ -221,14 +223,9 @@ class Splitter:
 
 
 def cleanup(output_directory: str) -> None:
-    def remove_temporary_midifiles() -> None:
-        midi_file: str
-
-        for midi_file in os.listdir(output_directory):
-            if midi_file.endswith('.midi'):
-                os.unlink(os.path.join(output_directory, midi_file))
-
-    remove_temporary_midifiles()
+    for file in os.listdir(output_directory):
+        if not file.endswith('.mp3'):
+            os.unlink(os.path.join(output_directory, file))
 
 
 def prepare_output_directory(output_directory: str) -> None:
@@ -237,3 +234,9 @@ def prepare_output_directory(output_directory: str) -> None:
         shutil.rmtree(output_directory)
 
     os.makedirs(output_directory)
+
+
+def create_mp3s_from_wavs(directory: str):
+    for file in os.listdir(directory):
+        if file.endswith('.wav'):
+            convert_to_mp3(os.path.join(directory, file))

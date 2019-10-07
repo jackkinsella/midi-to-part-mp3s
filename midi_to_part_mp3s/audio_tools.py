@@ -4,9 +4,6 @@ import subprocess
 
 import sox
 
-# Using 0.0 caused audible clipping
-GAIN_TO_AVOID_DISTORTION = -3.0
-
 
 def convert_to_mp3(wavfile_path: str) -> str:
     mp3file_path = re.sub(r'\.wav$', '.mp3', wavfile_path)
@@ -15,15 +12,15 @@ def convert_to_mp3(wavfile_path: str) -> str:
     # mode.
     lame_process = subprocess.Popen([
         "lame", "--preset", "standard", wavfile_path, mp3file_path
-    ],  stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    ], stdout=subprocess.DEVNULL)
     lame_process.wait()
 
     return mp3file_path
 
 
-def compress_audio_dynamic_range(input_file_path):
+def compress_audio_dynamic_range(input_file_path, gain_db):
     transformer = sox.Transformer()
-    transformer.norm(GAIN_TO_AVOID_DISTORTION)
+    transformer.norm(gain_db)
     # input and output files must differ for sox so we rename
     temp_name_for_operation = re.sub(r'\.wav$', '-bak.wav', input_file_path)
     os.rename(input_file_path, temp_name_for_operation)
@@ -33,13 +30,10 @@ def compress_audio_dynamic_range(input_file_path):
 
 def combine_audio_files(input_files, output_file_path, input_volumes=None):
     combiner = sox.Combiner()
-    combiner.norm(GAIN_TO_AVOID_DISTORTION)
-    if input_volumes:
-        # FIXME: Add back in input_volume variation once distortion confirmed
-        # gone without that complication.
-        combiner.build(input_files, output_file_path, 'mix')
-    else:
-        combiner.build(input_files, output_file_path, 'mix')
+    combiner.set_input_format(["wav"] * len(input_files))
+    gain_to_avoid_clipping = -3.0
+    combiner.gain(gain_to_avoid_clipping)
+    combiner.build(input_files, output_file_path, 'mix-power', input_volumes)
 
 
 def convert_midi_to_wav(midifile_path: str, soundfont_path: str) -> str:
@@ -54,5 +48,6 @@ def convert_midi_to_wav(midifile_path: str, soundfont_path: str) -> str:
     )
 
     fluidsynth_process.wait()
-    compress_audio_dynamic_range(wavfile_path)
+    gain_to_leave_room_for_mixing = -12
+    compress_audio_dynamic_range(wavfile_path, -12)
     return wavfile_path
