@@ -1,4 +1,4 @@
-def compress_dynamic_range(midi_data):
+def compress_midi_dynamic_range(midi_data):
     return equalize_volume_change_events(
         rescale_velocities(midi_data)
     )

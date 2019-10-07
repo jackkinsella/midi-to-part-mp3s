@@ -7,7 +7,8 @@ import sox  # type: ignore
 import mido  # type: ignore
 import music21  # type: ignore
 
-from midi_to_part_mp3s.dynamic_range_compression import compress_dynamic_range
+from midi_to_part_mp3s.midi_dynamic_range_compression import compress_midi_dynamic_range
+from midi_to_part_mp3s.audio_tools import combine_audio_files
 from midi_to_part_mp3s.custom_types import ConfigType, VoiceStringsType
 from midi_to_part_mp3s.part import Part
 from midi_to_part_mp3s.file_format_converters import check_format
@@ -32,7 +33,7 @@ class Splitter:
         )
 
         if self.config["compress_dynamic_range"]:
-            midi_data = compress_dynamic_range(midi_data)
+            midi_data = compress_midi_dynamic_range(midi_data)
 
         solo_parts: List[Part] = []
         voices: list = self.__create_voices()
@@ -132,18 +133,14 @@ class Splitter:
         return part
 
     def __generate_all_but_one_part_track(self, excluded_part, solo_parts) -> None:
-        combiner = sox.Combiner()
-
         input_files = [part.mp3_filepath() for part in solo_parts if part.name != excluded_part.name]
 
         output_file_path = "{}/all except {}.mp3".format(
             self.config["output_directory"], excluded_part.name
         )
-        combiner.build(input_files, output_file_path, 'mix-power')
+        combine_audio_files(input_files, output_file_path)
 
     def __generate_accompaniment(self, own_part, solo_parts) -> None:
-        combiner = sox.Combiner()
-
         accompaniment_volume_ratio = self.config["accompaniment_volume_ratio"]
         instrumental_volume_ratio = accompaniment_volume_ratio * self.config["instrumental_volume"]
         input_volumes = []
@@ -163,15 +160,12 @@ class Splitter:
 
         output_file_path = "{}/{} with accompaniment.mp3".format(
             self.config["output_directory"], own_part.name)
-        combiner.build(input_files, output_file_path, 'mix-power', input_volumes)
+        combine_audio_files(input_files, output_file_path, input_volumes)
 
     def __generate_full_mp3(self, solo_parts: List[Part]) -> None:
-        combiner = sox.Combiner()
-
-        # docs https://pysox.readthedocs.io/en/latest/api.html
         input_files = [part.mp3_filepath() for part in solo_parts]
         output_file_path = "{}/all.mp3".format(self.config["output_directory"])
-        combiner.build(input_files, output_file_path, 'mix-power')
+        combine_audio_files(input_files, output_file_path)
 
     def __has_separate_tempo_map(self, track0: mido.midifiles.tracks.MidiTrack) -> bool:
         return not any(event.type == "note_on" for event in track0)

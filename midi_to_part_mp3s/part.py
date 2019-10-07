@@ -1,6 +1,8 @@
 import os
 import subprocess
 
+from midi_to_part_mp3s.audio_tools import compress_audio_dynamic_range
+
 
 class Part:
     def __init__(self, name: str, midi: str,
@@ -26,7 +28,7 @@ class Part:
 
         fluidsynth_process = subprocess.Popen(
             [
-                "fluidsynth", "-r", "44100", "-R", "1", "-E", "little",  "-T",
+                "fluidsynth", "-r", "44100", "-R", "1", "-T",
                 "raw", "-F", "-", "-O", "s16", soundfont_path, midifile_path
             ], stdout=subprocess.PIPE)
 
@@ -37,6 +39,7 @@ class Part:
             # Due to a quick with `lame`, the normal output goes to stderr...
             stderr=subprocess.DEVNULL)
         fluidsynth_process.wait()
+        compress_audio_dynamic_range(self.mp3_filepath())
 
     def mp3_filepath(self) -> str:
         return self.midi_filepath.replace(".midi", ".mp3")
