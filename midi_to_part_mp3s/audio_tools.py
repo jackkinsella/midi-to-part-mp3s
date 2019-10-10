@@ -12,7 +12,7 @@ def convert_to_mp3(wavfile_path: str) -> str:
     # mode.
     lame_process = subprocess.Popen([
         "lame", "--preset", "standard", wavfile_path, mp3file_path
-    ], stdout=subprocess.DEVNULL)
+    ], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     lame_process.wait()
 
     return mp3file_path
@@ -33,7 +33,8 @@ def combine_audio_files(input_files, output_file_path, input_volumes=None):
     combiner.set_input_format(["wav"] * len(input_files))
     gain_to_avoid_clipping = -3.0
     combiner.gain(gain_to_avoid_clipping)
-    combiner.build(input_files, output_file_path, 'mix-power', input_volumes)
+
+    combiner.build(input_files, output_file_path, 'mix', input_volumes)
 
 
 def convert_midi_to_wav(midifile_path: str, soundfont_path: str) -> str:
@@ -41,13 +42,15 @@ def convert_midi_to_wav(midifile_path: str, soundfont_path: str) -> str:
 
     print("Converting {}".format(midifile_path))
 
+    # The files are saved with 24bits to give more space for editing (e.g.
+    # possible information loss due to volume reduction pre-mixing)
     fluidsynth_process = subprocess.Popen(
         [
-            "fluidsynth", "-F", wavfile_path, soundfont_path, midifile_path
+            "fluidsynth", "-O", "s16", "-F", wavfile_path, soundfont_path, midifile_path
         ], stdout=subprocess.DEVNULL
     )
 
     fluidsynth_process.wait()
     gain_to_leave_room_for_mixing = -12
-    compress_audio_dynamic_range(wavfile_path, -12)
+    compress_audio_dynamic_range(wavfile_path, gain_to_leave_room_for_mixing)
     return wavfile_path
