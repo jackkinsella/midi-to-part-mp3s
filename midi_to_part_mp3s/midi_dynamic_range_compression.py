@@ -35,9 +35,9 @@ def calibrate_existing_dynamic_range(midi_data):
     max_observed = None
 
     for track in midi_data.tracks:
+        observation_already_made = max_observed is not None and min_observed is not None
         for message in track:
             if message.type == 'note_on':
-                observation_already_made = max_observed and min_observed
                 if observation_already_made:
                     max_observed = max(message.velocity, max_observed)
                     min_observed = min(message.velocity, min_observed)

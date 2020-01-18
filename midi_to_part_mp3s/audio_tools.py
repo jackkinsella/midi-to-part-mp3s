@@ -10,9 +10,10 @@ def convert_to_mp3(wavfile_path: str) -> str:
     # Due to a quick with `lame`, the normal output goes to stderr, so we reduce
     # noisiness by redirecting to DEVNULL. Would be nice to show it in debug
     # mode.
-    lame_process = subprocess.Popen([
-        "lame", "--preset", "standard", wavfile_path, mp3file_path
-    ], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    lame_process = subprocess.Popen(
+        ["lame", "--preset", "standard", wavfile_path, mp3file_path],
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL)
     lame_process.wait()
 
     return mp3file_path
@@ -44,11 +45,11 @@ def convert_midi_to_wav(midifile_path: str, soundfont_path: str) -> str:
 
     # The files are saved with 24bits to give more space for editing (e.g.
     # possible information loss due to volume reduction pre-mixing)
-    fluidsynth_process = subprocess.Popen(
-        [
-            "fluidsynth", "-O", "s16", "-F", wavfile_path, soundfont_path, midifile_path
-        ], stdout=subprocess.DEVNULL
-    )
+    fluidsynth_process = subprocess.Popen([
+        "fluidsynth", "-O", "s16", "-F", wavfile_path, soundfont_path,
+        midifile_path
+    ],
+                                          stdout=subprocess.DEVNULL)
 
     fluidsynth_process.wait()
     gain_to_leave_room_for_mixing = -12
