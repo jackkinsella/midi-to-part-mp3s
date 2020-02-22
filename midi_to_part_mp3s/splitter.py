@@ -13,6 +13,7 @@ from midi_to_part_mp3s.audio_tools import combine_audio_files, convert_to_mp3
 from midi_to_part_mp3s.custom_types import ConfigType, VoiceStringsType
 from midi_to_part_mp3s.part import Part
 from midi_to_part_mp3s.file_format_converters import check_format
+from midi_to_part_mp3s.analysis import analyze
 
 sung_parts: List[VoiceStringsType] = ['soprano', 'alto', 'bass', 'tenor']
 
@@ -33,6 +34,8 @@ class Splitter:
         midi_data: mido.MidiFile = self.__ensure_separate_tempo_track(
             mido.MidiFile(midifile_path)
         )
+        # FIXME: This does not belong here
+        analyze(midi_data)
 
         if self.config["compress_dynamic_range"]:
             midi_data = compress_midi_dynamic_range(midi_data)
@@ -224,6 +227,7 @@ class Splitter:
 
         """
         if self.config["file_path"].startswith("http"):
+            self.__log("File not found locally....downloading ")
             return wget.download(self.config["file_path"])
         else:
             return self.config["file_path"]
