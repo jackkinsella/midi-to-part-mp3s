@@ -228,7 +228,7 @@ class Splitter:
         """
         if self.config["file_path"].startswith("http"):
             self.__log("File not found locally....downloading ")
-            return wget.download(self.config["file_path"])
+            return wget.download(self.config["file_path"], out="./tmp")
         else:
             return self.config["file_path"]
 
