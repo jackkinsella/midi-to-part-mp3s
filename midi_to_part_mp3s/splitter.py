@@ -1,6 +1,7 @@
 import os
 import sys
 import shutil
+import wget
 from typing import List
 
 import sox  # type: ignore
@@ -23,7 +24,7 @@ class Splitter:
     def split(self):
         output_directory = self.config["output_directory"]
         prepare_output_directory(output_directory)
-        converted_midifile_path = check_format(self.config["file_path"], output_directory)
+        converted_midifile_path = check_format(self.__local_file(), output_directory)
         self.__separate_tracks_into_wavs(converted_midifile_path)
         create_mp3s_from_wavs(output_directory)
         cleanup(output_directory)
@@ -40,6 +41,7 @@ class Splitter:
         voices: list = self.__create_voices()
         self.__add_accompaniment(voices)
         for part_name, track_numbers, instrument in voices:
+            print("Spliting out {} midi file".format(part_name))
             solo_part: Part = self.__generate_solo_parts(midi_data, track_numbers,
                                                          part_name, instrument
                                                          )
@@ -216,6 +218,15 @@ class Splitter:
                 program_change_message = mido.Message('program_change',
                                                       program=program_number)
                 track.insert(0, program_change_message)
+
+    def __local_file(self):
+        """Downloads file if at a remote URL
+
+        """
+        if self.config["file_path"].startswith("http"):
+            return wget.download(self.config["file_path"])
+        else:
+            return self.config["file_path"]
 
     def __log(self, message):
         if self.config["verbose"]:

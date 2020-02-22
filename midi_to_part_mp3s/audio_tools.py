@@ -41,7 +41,7 @@ def combine_audio_files(input_files, output_file_path, input_volumes=None):
 def convert_midi_to_wav(midifile_path: str, soundfont_path: str) -> str:
     wavfile_path = midifile_path.replace(".midi", ".wav")
 
-    print("Converting {}".format(midifile_path))
+    print("Generating temporary wav {}".format(wavfile_path))
 
     # The files are saved with 24bits to give more space for editing (e.g.
     # possible information loss due to volume reduction pre-mixing)
@@ -49,7 +49,7 @@ def convert_midi_to_wav(midifile_path: str, soundfont_path: str) -> str:
         "fluidsynth", "-O", "s16", "-F", wavfile_path, soundfont_path,
         midifile_path
     ],
-                                          stdout=subprocess.DEVNULL)
+        stdout=subprocess.DEVNULL)
 
     fluidsynth_process.wait()
     gain_to_leave_room_for_mixing = -12
