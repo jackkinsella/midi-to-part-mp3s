@@ -134,7 +134,14 @@ def get_parser() -> argparse.ArgumentParser:
         "--verbose",
         action='store_true',
         default=default_config["verbose"],
-        help=('Print detailed debugging information')
+        help=('Print more debugging information')
+    )
+    parser.add_argument(
+        "-la",
+        "--log-all-midi-messages",
+        action='store_true',
+        default=default_config["log_all_midi_messages"],
+        help=('Print every midi message (for extreme debugging)')
     )
     return parser
 

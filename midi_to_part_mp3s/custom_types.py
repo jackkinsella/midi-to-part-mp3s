@@ -24,6 +24,7 @@ ConfigType = TypedDict('ConfigType', {
     'instrument': int,
     'instrumental_accompaniment': List[int],
     'instrumental_volume': float,
+    'log_all_midi_messages': bool,
     "output_directory": str,
     'soundfont_path': str,
     'verbose': bool,

@@ -35,7 +35,7 @@ class Splitter:
             mido.MidiFile(midifile_path)
         )
         # FIXME: This does not belong here
-        analyze(midi_data)
+        analyze(midi_data, self.config["log_all_midi_messages"])
 
         if self.config["compress_dynamic_range"]:
             midi_data = compress_midi_dynamic_range(midi_data)
