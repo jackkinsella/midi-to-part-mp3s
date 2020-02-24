@@ -11,6 +11,10 @@ VoicesObjectType = TypedDict('VoicesObjectType', {
     'tenor': List[int]
 })
 
+
+MidiMessageType = Literal['note_on', 'control_change']
+MidiAttribute = Literal['velocity', 'value']
+
 ConfigType = TypedDict('ConfigType', {
     "accompaniment_volume_ratio": float,
     'compress_dynamic_range': bool,
