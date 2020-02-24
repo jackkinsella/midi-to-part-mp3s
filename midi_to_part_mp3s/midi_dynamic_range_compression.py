@@ -11,6 +11,8 @@ def compress_midi_dynamic_range(midi_data: mido.MidiFile):
 
 def rescale_appropriate_measure(midi_data: mido.MidiFile):
     if velocities_are_used_for_volume(midi_data):
+        # FIXME: Use regular logging
+        print("\n\n Rescaling velocities")
         return rescale('note_on', 'velocity', midi_data)
     else:
         # FIXME: Use regular logging
@@ -48,11 +50,9 @@ def rescale(midi_message_type: MidiMessageType,
         midi_message_type, midi_attribute, midi_data, control_code
     )
 
-    print("\n")
-    print(min_observed)
-    print("\n")
-    print(max_observed)
-    print("\n\n\n\n")
+    # print("\nRescale params")
+    # print(f"\n{min_observed}")
+    # print(f"\n{max_observed}")
     for track in midi_data.tracks:
         for message in track:
             if message.type != midi_message_type:
@@ -78,7 +78,7 @@ def calibrate_existing_dynamic_range_for(midi_message_type: MidiMessageType,
         observation_already_made = max_observed is not None and min_observed is not None
         for message in track:
             if message.type == midi_message_type:
-                if control_code and message.control == control_code:
+                if (not control_code) or (message.control == control_code):
                     attribute_value = getattr(message, midi_attribute)
                     if observation_already_made:
                         max_observed = max(attribute_value, max_observed)
