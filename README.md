@@ -47,6 +47,13 @@ usage: midi-to-part-mp3s -f FILE_PATH
 
 ## Development
 
+If you're having issues, run the command with the flags `-v` (`--verbose`) and `-la` (`--log-all-midi-messages`) and redirect the output to `debug.log`
+
+Afterwards use command line tools to debug the messages
+
+`rg velocity debug.log | rg note_on | awk '{print $4}' | uniq`
+
+
 ### Virtual Env
 
 When developing, you probably want the python requirements to be installed in a virtual env. We

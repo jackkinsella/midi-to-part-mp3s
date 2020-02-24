@@ -125,7 +125,7 @@ def get_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "-c",
         "--compress-dynamic-range",
-        action='store_true',
+        type=str2bool,
         default=default_config["compress_dynamic_range"],
         help="Gets rid of extreme differences in volume"
     )

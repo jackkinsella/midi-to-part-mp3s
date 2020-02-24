@@ -14,10 +14,12 @@ def rescale_appropriate_measure(midi_data: mido.MidiFile):
         # FIXME: Use regular logging
         print("\n\n Rescaling velocities")
         return rescale('note_on', 'velocity', midi_data)
-    else:
+    elif control_code_is_used_for_volume(midi_data, 11):
         # FIXME: Use regular logging
         print("\n\n Scaling expression cc=11")
         return rescale('control_change', 'value', midi_data, control_code=11)
+    else:
+        raise NotImplementedError("Unable to rescale velocities")
 
 
 def equalize_volume_change_events(midi_data: mido.MidiFile,
@@ -34,6 +36,16 @@ def velocities_are_used_for_volume(midi_data: mido.MidiFile):
     # FIXME: Find some was to use the __log function here to print out
     # fact that velocities cannot be used for dynamic range scaling.
     min_observed, max_observed = calibrate_existing_dynamic_range_for('note_on', 'velocity', midi_data)
+
+    return min_observed != max_observed
+
+
+def control_code_is_used_for_volume(midi_data: mido.MidiFile, control_code: int):
+    # FIXME: Find some was to use the __log function here to print out
+    # fact that velocities cannot be used for dynamic range scaling.
+    min_observed, max_observed = calibrate_existing_dynamic_range_for(
+        'control_change', 'value', midi_data, control_code
+    )
 
     return min_observed != max_observed
 
