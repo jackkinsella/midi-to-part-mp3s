@@ -13,7 +13,10 @@ from typing import List
 
 
 def help_string_for_voice(voice: VoiceStringsType):
-    default = default_config["voices"][voice][0]
+    if any(default_config["voices"][voice]):
+        default = default_config["voices"][voice][0]
+    else:
+        default = "'disabled voice'"
     return f'comma separated list of midi track IDs, defaults to "{default}"'
 
 
@@ -39,6 +42,12 @@ def get_parser() -> argparse.ArgumentParser:
         "--soprano",
         type=convert_to_list,
         help=help_string_for_voice("soprano")
+    )
+    parser.add_argument(
+        "-s2",
+        "--soprano2",
+        type=convert_to_list,
+        help=help_string_for_voice("soprano2")
     )
     parser.add_argument(
         "-a",
@@ -147,11 +156,13 @@ def get_parser() -> argparse.ArgumentParser:
 
 
 def user_has_set_all_voices(config):
-    return all([config["soprano"], config["alto"], config["tenor"], config["bass"]])
+    return all([config["soprano"], config["alto"],
+                config["tenor"], config["bass"]])
 
 
 def user_has_set_no_voices(config):
-    return not any([config["soprano"], config["alto"], config["tenor"], config["bass"]])
+    return not any([config["soprano"], config["alto"],
+                    config["tenor"], config["bass"]])
 
 
 def convert_cli_args_to_internal_config(argv: List) -> ConfigType:
@@ -163,6 +174,7 @@ def convert_cli_args_to_internal_config(argv: List) -> ConfigType:
             "alto": config["alto"],
             "bass": config["bass"],
             "soprano": config["soprano"],
+            "soprano2": config["soprano2"],
             "tenor": config["tenor"]
         }
     elif user_has_set_no_voices(parsed_args):

@@ -15,7 +15,8 @@ from midi_to_part_mp3s.part import Part
 from midi_to_part_mp3s.file_format_converters import check_format
 from midi_to_part_mp3s.analysis import analyze
 
-sung_parts: List[VoiceStringsType] = ['soprano', 'alto', 'bass', 'tenor']
+sung_parts: List[VoiceStringsType] = ['soprano',
+                                      'soprano2', 'alto', 'bass', 'tenor']
 
 
 class Splitter:

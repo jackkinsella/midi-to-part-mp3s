@@ -17,6 +17,7 @@ default_config: ConfigType = {
         "alto": [2],
         "bass": [4],
         "soprano": [1],
+        "soprano2": [],
         "tenor": [3]
     },
 }

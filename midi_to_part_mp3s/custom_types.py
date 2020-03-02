@@ -2,12 +2,13 @@ from mypy_extensions import TypedDict
 from typing_extensions import Literal
 from typing import List
 
-VoiceStringsType = Literal["alto", "bass", "soprano", "tenor"]
+VoiceStringsType = Literal["alto", "bass", "soprano", "soprano2", "tenor"]
 
 VoicesObjectType = TypedDict('VoicesObjectType', {
     'alto': List[int],
     'bass': List[int],
     'soprano': List[int],
+    'soprano2': List[int],
     'tenor': List[int]
 })
 
@@ -28,4 +29,5 @@ ConfigType = TypedDict('ConfigType', {
     "output_directory": str,
     'soundfont_path': str,
     'verbose': bool,
-    'voices': VoicesObjectType})
+    'voices': VoicesObjectType}
+)
