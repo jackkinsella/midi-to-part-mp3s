@@ -89,3 +89,6 @@ Assuming you use the virtual env run all unit tests by calling the following com
 * tests/fixtures/Schubert-872-sanctus.mid – does not have a separate tempo map, therefore exercises our internal midi rewrite features
 * tests/fixtures/Brahms-Da-unten-im-Tale.mid - Another SATB example for general testing
 * tests/fixtures/Abendlied-Rheinberger.xml - MusicXML example to test conversion and SSAATTBB track generation
+* tests/fixtures/chillingham.mid - Example that uses channel instead of tracks to split up different voices
+* tests/fixtures/an_den_mond.midi - Example that has all the same CC=11 to scale
+  volumen instead
