@@ -1,19 +1,16 @@
 import os
-import sys
 import shutil
 import wget
 from typing import List
 
-import sox  # type: ignore
 import mido  # type: ignore
-import music21  # type: ignore
 
 from midi_to_part_mp3s.midi_dynamic_range_compression import compress_midi_dynamic_range
 from midi_to_part_mp3s.audio_tools import combine_audio_files, convert_to_mp3
 from midi_to_part_mp3s.custom_types import ConfigType, VoiceStringsType
 from midi_to_part_mp3s.part import Part
 from midi_to_part_mp3s.file_format_converters import check_format
-from midi_to_part_mp3s.analysis import analyze
+from midi_to_part_mp3s.analysis import analyze, is_split_by_channel
 
 sung_parts: List[VoiceStringsType] = ['soprano',
                                       'soprano2', 'alto', 'bass', 'tenor']
@@ -26,7 +23,8 @@ class Splitter:
     def split(self):
         output_directory = self.config["output_directory"]
         prepare_output_directory(output_directory)
-        converted_midifile_path = check_format(self.__local_file(), output_directory)
+        converted_midifile_path = check_format(self.__local_file(),
+                                               output_directory)
         self.__separate_tracks_into_wavs(converted_midifile_path)
         create_mp3s_from_wavs(output_directory)
         cleanup(output_directory)
@@ -46,9 +44,9 @@ class Splitter:
         self.__add_accompaniment(voices)
         for part_name, track_numbers, instrument in voices:
             print("Spliting out {} midi file".format(part_name))
-            solo_part: Part = self.__generate_solo_parts(midi_data, track_numbers,
-                                                         part_name, instrument
-                                                         )
+            solo_part: Part = self.__generate_solo_parts(
+                midi_data, track_numbers, part_name, instrument
+            )
             solo_parts.append(solo_part)
 
         part: Part
@@ -62,7 +60,9 @@ class Splitter:
 
         self.__generate_full_wav(solo_parts)
 
-    def __ensure_separate_tempo_track(self, midi_data: mido.MidiFile) -> mido.MidiFile:
+    def __ensure_separate_tempo_track(
+        self, midi_data: mido.MidiFile
+    ) -> mido.MidiFile:
         number_of_tracks = len(midi_data.tracks)
         self.__log(f"Input file has {number_of_tracks} tracks")
 
@@ -77,11 +77,6 @@ class Splitter:
     # that this produces something structured: {name: "Soprano 1", midi_tracks:
     # [0, 3], instrument: 0}
     def __create_voices(self) -> list:
-        """Creates a nested list of the voices with their assigned midi track number
-
-        Returns:
-            List[List] -- list of voices and their assigned midi track numbers
-        """
         voices: List[List] = []
         tempo_map_track_number = 0
         sung_part: VoiceStringsType
@@ -94,34 +89,21 @@ class Splitter:
                     tracks.append(tempo_map_track_number)
                     tracks.append(track_id)
                     instrument = self.config["instrument"]
-                    name = sung_part if i == 0 else sung_part + ' ' + str(i + 1)
+                    name = sung_part if i == 0 else sung_part + \
+                        ' ' + str(i + 1)
                     voice = [name, tracks, instrument]
                     voices.append(voice)
         self.__log(f"Voices generated {voices}")
         return voices
 
     def __add_accompaniment(self, voices: list) -> None:
-        """Edits the voices list to include the accompaniment voice
-
-        Arguments:
-            voices {list} -- list of voices and their assigned midi track numbers
-        """
         if self.config["instrumental_accompaniment"]:
-            voices.append(['accompaniment', self.config["instrumental_accompaniment"]])
+            voices.append(
+                ['accompaniment', self.config["instrumental_accompaniment"]])
 
-    def __generate_solo_parts(self, midi_data: mido.MidiFile, track_numbers: List[int],
-                              part_name: str, instrument_number: int) -> Part:
-        """Generates a solo part and returns a Part object describing it
-
-        Arguments:
-            midi_data {mido.MidiFile} -- original midi data
-            track_numbers {List[int]} -- numbers of the tracks to include in the solo parts
-            part_name {str} -- name of the past
-            instrument_number {int} -- id of the instrument in the configured soundfont
-
-        Returns:
-            Part -- generated Part object
-        """
+    def __generate_solo_parts(
+            self, midi_data: mido.MidiFile, track_numbers: List[int],
+            part_name: str, instrument_number: int) -> Part:
         midi: mido.MidiFile = mido.MidiFile()
         midi.ticks_per_beat = midi_data.ticks_per_beat
 
@@ -131,7 +113,8 @@ class Splitter:
 
         if part_name != 'accompaniment':
             self.__change_instrument(midi, instrument_number)
-        new_file_path = "{}/{}.midi".format(self.config["output_directory"], part_name)
+        new_file_path = "{}/{}.midi".format(
+            self.config["output_directory"], part_name)
         midi.save(new_file_path)
 
         part = Part(name=part_name, midi=midi, midifile_path=new_file_path,
@@ -140,8 +123,13 @@ class Splitter:
 
         return part
 
-    def __generate_all_but_one_part_track(self, excluded_part, solo_parts) -> None:
-        input_files = [part.wavfile_path for part in solo_parts if part.name != excluded_part.name]
+    def __generate_all_but_one_part_track(
+            self, excluded_part, solo_parts
+    ) -> None:
+        input_files = [
+            part.wavfile_path for part in solo_parts
+            if part.name != excluded_part.name
+        ]
 
         output_file_path = "{}/all except {}.wav".format(
             self.config["output_directory"], excluded_part.name
@@ -150,7 +138,8 @@ class Splitter:
 
     def __generate_accompaniment(self, own_part, solo_parts) -> None:
         accompaniment_volume_ratio = self.config["accompaniment_volume_ratio"]
-        instrumental_volume_ratio = accompaniment_volume_ratio * self.config["instrumental_volume"]
+        instrumental_volume_ratio = accompaniment_volume_ratio * \
+            self.config["instrumental_volume"]
         input_volumes = []
         input_files = []
         for part in solo_parts:
@@ -175,10 +164,14 @@ class Splitter:
         output_file_path = "{}/all.wav".format(self.config["output_directory"])
         combine_audio_files(input_files, output_file_path)
 
-    def __has_separate_tempo_map(self, track0: mido.midifiles.tracks.MidiTrack) -> bool:
+    def __has_separate_tempo_map(
+            self, track0: mido.midifiles.tracks.MidiTrack
+    ) -> bool:
         return not any(event.type == "note_on" for event in track0)
 
-    def __separate_out_tempo_map(self, midi_data: mido.MidiFile) -> mido.MidiFile:
+    def __separate_out_tempo_map(
+            self, midi_data: mido.MidiFile
+    ) -> mido.MidiFile:
         tempo_map_track = []
         initial_track = midi_data.tracks[0]
         rewritten_initial_track = []
@@ -202,7 +195,9 @@ class Splitter:
 
         return rewritten_midi
 
-    def __change_instrument(self, midi_data: mido.MidiFile, program_number: int):
+    def __change_instrument(
+            self, midi_data: mido.MidiFile, program_number: int
+    ):
         """Changes the instrument in all tracks of the given midi_data
         object to the instrument identified by program_number
 

@@ -1,15 +1,15 @@
 import mido
-from typing import Optional
+from typing import Optional, Tuple
 from midi_to_part_mp3s.custom_types import MidiMessageType, MidiAttribute
 
 
-def compress_midi_dynamic_range(midi_data: mido.MidiFile):
+def compress_midi_dynamic_range(midi_data: mido.MidiFile) -> mido.MidiFile:
     return equalize_volume_change_events(
         rescale_appropriate_measure(midi_data)
     )
 
 
-def rescale_appropriate_measure(midi_data: mido.MidiFile):
+def rescale_appropriate_measure(midi_data: mido.MidiFile) -> mido.MidiFile:
     if velocities_are_used_for_volume(midi_data):
         # FIXME: Use regular logging
         print("\n\n Rescaling velocities")
@@ -22,8 +22,9 @@ def rescale_appropriate_measure(midi_data: mido.MidiFile):
         raise NotImplementedError("Unable to rescale velocities")
 
 
-def equalize_volume_change_events(midi_data: mido.MidiFile,
-                                  constant_volume_setting: int = 100):
+def equalize_volume_change_events(
+    midi_data: mido.MidiFile, constant_volume_setting: int = 100
+) -> mido.MidiFile:
     for track in midi_data.tracks:
         for message in track:
             if message.type == 'control_change' and message.control == 7:
@@ -32,15 +33,17 @@ def equalize_volume_change_events(midi_data: mido.MidiFile,
     return midi_data
 
 
-def velocities_are_used_for_volume(midi_data: mido.MidiFile):
+def velocities_are_used_for_volume(midi_data: mido.MidiFile) -> bool:
     # FIXME: Find some was to use the __log function here to print out
     # fact that velocities cannot be used for dynamic range scaling.
-    min_observed, max_observed = calibrate_existing_dynamic_range_for('note_on', 'velocity', midi_data)
+    min_observed, max_observed = calibrate_existing_dynamic_range_for(
+        'note_on', 'velocity', midi_data)
 
     return min_observed != max_observed
 
 
-def control_code_is_used_for_volume(midi_data: mido.MidiFile, control_code: int):
+def control_code_is_used_for_volume(midi_data: mido.MidiFile,
+                                    control_code: int) -> bool:
     # FIXME: Find some was to use the __log function here to print out
     # fact that velocities cannot be used for dynamic range scaling.
     min_observed, max_observed = calibrate_existing_dynamic_range_for(
@@ -53,7 +56,7 @@ def control_code_is_used_for_volume(midi_data: mido.MidiFile, control_code: int)
 def rescale(midi_message_type: MidiMessageType,
             midi_attribute: MidiAttribute,
             midi_data: mido.MidiFile,
-            control_code=None):
+            control_code=None) -> mido.MidiFile:
     # full range is 0-127
     min_allowed = 55
     max_allowed = 70
@@ -79,10 +82,11 @@ def rescale(midi_message_type: MidiMessageType,
     return midi_data
 
 
-def calibrate_existing_dynamic_range_for(midi_message_type: MidiMessageType,
-                                         midi_attribute: MidiAttribute,
-                                         midi_data: mido.MidiFile,
-                                         control_code: Optional[int] = None):
+def calibrate_existing_dynamic_range_for(
+    midi_message_type: MidiMessageType, midi_attribute: MidiAttribute,
+    midi_data: mido.MidiFile, control_code: Optional[int] = None
+    # Fixme: Should be Tuple[int] but having issues
+) -> Tuple:
     min_observed = None
     max_observed = None
 

@@ -1,7 +1,7 @@
 import mido
 
 
-def analyze(midi: mido.MidiFile, log_all_midi_messages=False):
+def analyze(midi: mido.MidiFile, log_all_midi_messages=False) -> None:
     print("Analyzing midi file\n")
     print(f"Number of tracks: {number_of_tracks(midi)}\n")
     if is_split_by_channel(midi):
@@ -23,17 +23,17 @@ def analyze(midi: mido.MidiFile, log_all_midi_messages=False):
                 print(message)
 
 
-def number_of_midi_channels(track: mido.MidiTrack):
+def number_of_midi_channels(track: mido.MidiTrack) -> int:
     return len(
         set(message.channel for message in track if not message.is_meta)
     )
 
 
-def number_of_tracks(midi: mido.MidiFile):
+def number_of_tracks(midi: mido.MidiFile) -> int:
     return len(midi.tracks)
 
 
-def is_split_by_channel(midi: mido.MidiFile):
+def is_split_by_channel(midi: mido.MidiFile) -> bool:
     last_track = midi.tracks[-1]
     if number_of_tracks(midi) <= 2 and number_of_midi_channels(last_track) > 1:
         return True
