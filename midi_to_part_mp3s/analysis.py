@@ -3,6 +3,7 @@ import mido
 
 def analyze(midi: mido.MidiFile, log_all_midi_messages=False) -> None:
     print("Analyzing midi file\n")
+    print(f"BPM: {bpm(midi)}\n")
     print(f"Number of tracks: {number_of_tracks(midi)}\n")
     if is_split_by_channel(midi):
         print("Split by channel\n")
@@ -31,6 +32,14 @@ def number_of_channels(track: mido.MidiTrack) -> int:
 
 def number_of_tracks(midi: mido.MidiFile) -> int:
     return len(midi.tracks)
+
+
+def bpm(midi: mido.MidiFile) -> int:
+    for track in midi.tracks:
+        for message in track:
+            if message.is_meta and message.type == "set_tempo":
+                return int(mido.tempo2bpm(message.tempo))
+    raise Exception("Not set_tempo message found")
 
 
 def is_split_by_channel(midi: mido.MidiFile) -> bool:
