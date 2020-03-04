@@ -1,4 +1,21 @@
 import music21  # type: ignore
+import re
+import subprocess
+
+
+def convert_to_mp3(wavfile_path: str) -> str:
+    mp3file_path = re.sub(r'\.wav$', '.mp3', wavfile_path)
+    print(f"Creating MP3 {mp3file_path}")
+    # Due to a quick with `lame`, the normal output goes to stderr, so we reduce
+    # noisiness by redirecting to DEVNULL. Would be nice to show it in debug
+    # mode.
+    lame_process = subprocess.Popen(
+        ["lame", "--preset", "standard", wavfile_path, mp3file_path],
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL)
+    lame_process.wait()
+
+    return mp3file_path
 
 
 def check_format(file_path: str, output_directory: str) -> str:

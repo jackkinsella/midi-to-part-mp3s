@@ -5,20 +5,6 @@ import subprocess
 import sox
 
 
-def convert_to_mp3(wavfile_path: str) -> str:
-    mp3file_path = re.sub(r'\.wav$', '.mp3', wavfile_path)
-    # Due to a quick with `lame`, the normal output goes to stderr, so we reduce
-    # noisiness by redirecting to DEVNULL. Would be nice to show it in debug
-    # mode.
-    lame_process = subprocess.Popen(
-        ["lame", "--preset", "standard", wavfile_path, mp3file_path],
-        stdout=subprocess.DEVNULL,
-        stderr=subprocess.DEVNULL)
-    lame_process.wait()
-
-    return mp3file_path
-
-
 def compress_audio_dynamic_range(input_file_path, gain_db):
     transformer = sox.Transformer()
     transformer.norm(gain_db)
