@@ -10,7 +10,7 @@ from midi_to_part_mp3s.audio_tools import combine_audio_files, convert_to_mp3
 from midi_to_part_mp3s.custom_types import ConfigType, VoiceStringsType
 from midi_to_part_mp3s.part import Part
 from midi_to_part_mp3s.file_format_converters import check_format
-from midi_to_part_mp3s.analysis import analyze, is_split_by_channel
+from midi_to_part_mp3s.analysis import analyze, is_split_by_channel, number_of_channels
 
 sung_parts: List[VoiceStringsType] = ['soprano',
                                       'soprano2', 'alto', 'bass', 'tenor']
@@ -23,19 +23,21 @@ class Splitter:
     def split(self):
         output_directory = self.config["output_directory"]
         prepare_output_directory(output_directory)
-        converted_midifile_path = check_format(self.__local_file(),
-                                               output_directory)
+        converted_midifile_path = check_format(
+            self.__local_file(), output_directory
+        )
         self.__separate_tracks_into_wavs(converted_midifile_path)
         create_mp3s_from_wavs(output_directory)
         cleanup(output_directory)
 
     def __separate_tracks_into_wavs(self, midifile_path: str) -> None:
-        midi_data: mido.MidiFile = self.__ensure_separate_tempo_track(
-            mido.MidiFile(midifile_path)
-        )
+        midi_data: mido.MidiFile = mido.MidiFile(midifile_path)
         # FIXME: This does not belong here
         analyze(midi_data, self.config["log_all_midi_messages"])
-
+        # FIXME: typehinting not working here
+        midi_data = self.__ensure_separate_tempo_track(
+            mido.MidiFile(midifile_path)
+        )
         if self.config["compress_dynamic_range"]:
             midi_data = compress_midi_dynamic_range(midi_data)
 
@@ -109,7 +111,12 @@ class Splitter:
 
         track_number: int
         for track_number in track_numbers:
-            midi.tracks.append(midi_data.tracks[track_number])
+            if is_split_by_channel(midi_data):
+                for channel_number in range(number_of_channels(midi_data)):
+                    midi.tracks.append(self.__extract_channel(channel_number,
+                                                              midi_data.tracks[-1]))
+            else:
+                midi.tracks.append(midi_data.tracks[track_number])
 
         if part_name != 'accompaniment':
             self.__change_instrument(midi, instrument_number)
@@ -122,6 +129,17 @@ class Splitter:
                     )
 
         return part
+
+    def __extract_channel(
+            self, channel_number: int, track: List[mido.Message]
+    ) -> List[mido.Message]:
+        messages = []
+        for message in track:
+            if message.type == "note_on" and message.channel == channel_number:
+                next
+            messages.append(message)
+
+        return messages
 
     def __generate_all_but_one_part_track(
             self, excluded_part, solo_parts
@@ -138,8 +156,8 @@ class Splitter:
 
     def __generate_accompaniment(self, own_part, solo_parts) -> None:
         accompaniment_volume_ratio = self.config["accompaniment_volume_ratio"]
-        instrumental_volume_ratio = accompaniment_volume_ratio * \
-            self.config["instrumental_volume"]
+        instrumental_volume_ratio = (accompaniment_volume_ratio *
+                                     self.config["instrumental_volume"])
         input_volumes = []
         input_files = []
         for part in solo_parts:
@@ -167,7 +185,7 @@ class Splitter:
     def __has_separate_tempo_map(
             self, track0: mido.midifiles.tracks.MidiTrack
     ) -> bool:
-        return not any(event.type == "note_on" for event in track0)
+        return not any(message.type == "note_on" for message in track0)
 
     def __separate_out_tempo_map(
             self, midi_data: mido.MidiFile
