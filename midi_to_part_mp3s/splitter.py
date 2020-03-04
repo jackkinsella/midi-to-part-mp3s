@@ -103,6 +103,15 @@ class Splitter:
             voices.append(
                 ['accompaniment', self.config["instrumental_accompaniment"]])
 
+    # FIXME: This belongs elsewhere, as does its callr.
+    def __set_bpm(self, midi: mido.MidiFile, bpm: int) -> mido.MidiFile:
+        for track in midi.tracks:
+            for message in track:
+                if message.is_meta and message.type == "set_tempo":
+                    message.tempo = mido.bpm2tempo(bpm)
+
+        return midi
+
     def __generate_solo_parts(
             self, midi_data: mido.MidiFile, track_numbers: List[int],
             part_name: str, instrument_number: int) -> Part:
