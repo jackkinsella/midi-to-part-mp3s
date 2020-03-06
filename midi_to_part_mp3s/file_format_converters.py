@@ -1,4 +1,3 @@
-import music21  # type: ignore
 import re
 import subprocess
 
@@ -19,17 +18,6 @@ def convert_to_mp3(wavfile_path: str) -> str:
 
 
 def check_format(file_path: str, output_directory: str) -> str:
-    """If the format is midi, proceed. If the format is MusicXML, convert to midi.
-
-    Arguments:
-        file_path {[str]} -- path of the file to convert
-
-    Raises:
-        NameError: Raised if trying to convert a format not supported by the script
-
-    Returns:
-        str -- midi file name (original or converted midi file)
-    """
     if file_path.endswith('.mid') or file_path.endswith('.midi'):
         return file_path
     elif file_path.endswith('.mxl') or file_path.endswith('.musicxml'):
@@ -40,18 +28,15 @@ def check_format(file_path: str, output_directory: str) -> str:
 
 
 def convert_music_xml_to_midi(file_path: str, output_directory: str) -> str:
-    """Converts a MusicXML file to midi
+    # Must be 'mid' not "midi" to work with Musescore
+    converted_file_path = output_directory + '/temp.mid'
+    print("\nConverting to midi")
+    # We expect the musescore executable to be available on PATH
+    process = subprocess.Popen(
+        ["mscore", "-o", converted_file_path, file_path],
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL)
+    if process.wait() != 0:
+        raise Exception("Problem executing mscore subprocess")
 
-    Arguments:
-        file_path {str} -- file path of the the MusicXML file
-
-    Returns:
-        str -- path of the converted midi file after conversion
-    """
-    converted_file_path = output_directory + '/temp.midi'
-    score: music21.stream.Score = music21.converter.parse(file_path)
-    midi_file = music21.midi.translate.streamToMidiFile(score)
-    midi_file.open(converted_file_path, 'wb')
-    midi_file.write()
-    midi_file.close()
     return converted_file_path

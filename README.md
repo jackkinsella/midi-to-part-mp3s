@@ -16,7 +16,7 @@ $ pip3 install -r requirements.txt
 * [Lame](http://lame.sourceforge.net/) - create mp3 files.
 * [SoX](http://sox.sourceforge.net/) - mix audio files.
 * [mido](https://mido.readthedocs.io/en/latest/)  - midi objects for python.
-* [music21](https://web.mit.edu/music21/) - music toolkit used to convert MusicXML to midi.
+* [musescore](https://musescore.org/en/handbook/install-linux) - music toolkit used to convert MusicXML to midi.
 * A general soundfont. This must be placed within './soundfonts'. The program assumes you have [Timbres of Heaven](https://drive.google.com/uc?id=0B2NEzl-56UFHd054VnJETzJOZjg&export=download) downloaded to that folder and named `timbres-of-heaven.sf2`. If you download an `.sfark` file, you can [go here to convert it](https://cloudconvert.com/sfark-to-sf2) to ".sf2".
 
 # Usage
@@ -92,3 +92,4 @@ Assuming you use the virtual env run all unit tests by calling the following com
 * tests/fixtures/chillingham.mid - Example that uses channel instead of tracks to split up different voices
 * tests/fixtures/an_den_mond.midi - Example that has all the same CC=11 to scale
   volumen instead
+* tests/fixtures/Ws-mend-595.midi - MusicXML example where the tempo info was lost with some conversion kits. File should be 1:47 (not 40 seconds as it were initially)
