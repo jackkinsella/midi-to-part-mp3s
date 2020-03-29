@@ -5,12 +5,18 @@ from typing import List
 
 import mido  # type: ignore
 
-from midi_to_part_mp3s.midi_dynamic_range_compression import compress_midi_dynamic_range
+from midi_to_part_mp3s.midi_dynamic_range_compression import (
+    compress_midi_dynamic_range
+)
 from midi_to_part_mp3s.audio_tools import combine_audio_files
 from midi_to_part_mp3s.custom_types import ConfigType, VoiceStringsType
 from midi_to_part_mp3s.part import Part
-from midi_to_part_mp3s.file_format_converters import check_format, convert_to_mp3
-from midi_to_part_mp3s.analysis import analyze, is_split_by_channel, number_of_channels
+from midi_to_part_mp3s.file_format_converters import (
+    check_format, convert_to_mp3
+)
+from midi_to_part_mp3s.analysis import (
+    analyze, is_split_by_channel, number_of_channels
+)
 
 sung_parts: List[VoiceStringsType] = ['soprano',
                                       'soprano2', 'alto', 'bass', 'tenor']
