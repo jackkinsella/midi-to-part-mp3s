@@ -24,7 +24,8 @@ def check_format(file_path: str, output_directory: str) -> str:
         return convert_music_xml_to_midi(file_path, output_directory)
     else:
         raise NameError(
-            'The application currently only supports midi or MusicXML format')
+            'The application currently only supports midi or MusicXML format'
+        )
 
 
 def convert_music_xml_to_midi(file_path: str, output_directory: str) -> str:
