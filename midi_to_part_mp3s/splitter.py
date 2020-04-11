@@ -216,14 +216,22 @@ class Splitter:
         rewritten_initial_track = []
 
         for event in initial_track:
+            # Because time is measured in deltas, we need to subsitute
+            # no-op events when transfering between midi files.
+            no_op_event = mido.Message('note_off',
+                                       note=0,
+                                       velocity=0,
+                                       time=event.time)
             if event.is_meta:
                 if event.type in ["instrument_name", "key_signature"]:
                     rewritten_initial_track.append(event)
+                    tempo_map_track.append(no_op_event)
                 else:
-                    rewritten_initial_track.append(event)
+                    rewritten_initial_track.append(no_op_event)
                     tempo_map_track.append(event)
             else:
                 rewritten_initial_track.append(event)
+                tempo_map_track.append(no_op_event)
 
         rewritten_midi = mido.MidiFile()
         rewritten_midi.ticks_per_beat = midi_data.ticks_per_beat
