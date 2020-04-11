@@ -34,7 +34,8 @@ class Splitter:
         )
         self.__separate_tracks_into_wavs(converted_midifile_path)
         create_mp3s_from_wavs(output_directory)
-        cleanup(output_directory)
+        if not self.config["retain_intermediate_files"]:
+            cleanup(output_directory)
 
     def __separate_tracks_into_wavs(self, midifile_path: str) -> None:
         midi_data: mido.MidiFile = mido.MidiFile(midifile_path)

@@ -111,6 +111,15 @@ def get_parser() -> argparse.ArgumentParser:
                             MusicXML (.mid, .midi, .mxl, .musicxml)'
     )
     parser.add_argument(
+        "-rif",
+        "--retain-intermediate-files",
+        type=str2bool,
+        const=True,
+        nargs='?',
+        help='Keep the intermediate midi and wav files around instead of deleting them',
+        default=default_config["retain_intermediate_files"]
+    )
+    parser.add_argument(
         "-gat",
         "--generate-accompaniment-tracks",
         type=str2bool,
