@@ -10,6 +10,7 @@ default_config: ConfigType = {
     "instrumental_accompaniment": [],
     "instrumental_volume": 2.0,
     "log_all_midi_messages": False,
+    "tempo_scaling_factor": 1.0,
     "output_directory": "./output",
     "soundfont_path": "./soundfonts/timbres-of-heaven.sf2",
     "verbose": False,

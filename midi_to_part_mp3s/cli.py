@@ -75,6 +75,13 @@ def get_parser() -> argparse.ArgumentParser:
         help=('instrument for voices. Defaults to "49"')
     )
     parser.add_argument(
+        "-tsf",
+        "--tempo-scaling-factor",
+        help="ratio of how much to scale tempo by",
+        type=float,
+        default=default_config["tempo_scaling_factor"]
+    )
+    parser.add_argument(
         "-av",
         "--accompaniment-volume-ratio",
         help="ratio of how loud accompanying voices should be in the accompaniment tracks",

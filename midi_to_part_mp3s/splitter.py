@@ -46,12 +46,15 @@ class Splitter:
         )
         if self.config["compress_dynamic_range"]:
             midi_data = compress_midi_dynamic_range(midi_data)
+        if self.config["tempo_scaling_factor"] != 1.0:
+            midi_data = self.__scale_tempo(midi_data,
+                                           self.config["tempo_scaling_factor"])
 
         solo_parts: List[Part] = []
         voices: list = self.__create_voices()
         self.__add_accompaniment(voices)
         for part_name, track_numbers, instrument in voices:
-            print("Spliting out {} midi file".format(part_name))
+            self.__log(f"Spliting out {part_name} midi file")
             solo_part: Part = self.__generate_solo_parts(
                 midi_data, track_numbers, part_name, instrument
             )
@@ -109,12 +112,14 @@ class Splitter:
             voices.append(
                 ['accompaniment', self.config["instrumental_accompaniment"]])
 
-    # FIXME: This belongs elsewhere, as does its callr.
-    def __set_bpm(self, midi: mido.MidiFile, bpm: int) -> mido.MidiFile:
+    # FIXME: This belongs elsewhere
+    def __scale_tempo(self, midi: mido.MidiFile, scaling_factor: float) -> mido.MidiFile:
         for track in midi.tracks:
             for message in track:
                 if message.is_meta and message.type == "set_tempo":
-                    message.tempo = mido.bpm2tempo(bpm)
+                    # The tempo is not represented in BPM we need to take the
+                    # inverse
+                    message.tempo = round(message.tempo * (1 / scaling_factor))
 
         return midi
 
