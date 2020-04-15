@@ -18,8 +18,8 @@ from midi_to_part_mp3s.analysis import (
     analyze, is_split_by_channel, number_of_channels
 )
 
-sung_parts: List[VoiceStringsType] = ['soprano',
-                                      'soprano2', 'alto', 'bass', 'tenor']
+sung_parts: List[VoiceStringsType] = ['soprano', 'soprano2', 'alto',
+                                      'alto2', 'bass', 'bass2', 'tenor', 'tenor2']
 
 
 class Splitter:

@@ -17,9 +17,12 @@ default_config: ConfigType = {
     "verbose": False,
     "voices": {
         "alto": [2],
+        "alto2": [],
         "bass": [4],
+        "bass2": [],
         "soprano": [1],
         "soprano2": [],
-        "tenor": [3]
+        "tenor": [3],
+        "tenor2": []
     },
 }

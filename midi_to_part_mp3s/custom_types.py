@@ -2,14 +2,22 @@ from mypy_extensions import TypedDict
 from typing_extensions import Literal
 from typing import List
 
-VoiceStringsType = Literal["alto", "bass", "soprano", "soprano2", "tenor"]
+SATB_VOICES = ["alto", "soprano", "bass", "tenor"]
+
+# FIXME: I wish I did not have to list these keys once here and then again in
+# the VoicesObjectType
+VoiceStringsType = Literal["alto", "alto2", "bass",
+                           "bass2", "soprano", "soprano2", "tenor", "tenor2"]
 
 VoicesObjectType = TypedDict('VoicesObjectType', {
     'alto': List[int],
+    'alto2': List[int],
     'bass': List[int],
+    'bass2': List[int],
     'soprano': List[int],
     'soprano2': List[int],
-    'tenor': List[int]
+    'tenor': List[int],
+    'tenor2': List[int]
 })
 
 
