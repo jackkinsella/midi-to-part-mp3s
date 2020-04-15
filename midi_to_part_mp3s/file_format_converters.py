@@ -20,15 +20,16 @@ def convert_to_mp3(wavfile_path: str) -> str:
 def check_format(file_path: str, output_directory: str) -> str:
     if file_path.endswith('.mid') or file_path.endswith('.midi'):
         return file_path
-    elif file_path.endswith('.mxl') or file_path.endswith('.musicxml'):
-        return convert_music_xml_to_midi(file_path, output_directory)
+    elif (file_path.endswith('.mxl') or file_path.endswith('.musicxml')
+          or file_path.endswith('mscz')):
+        return convert_with_musescore(file_path, output_directory)
     else:
         raise NameError(
             'The application currently only supports midi or MusicXML format'
         )
 
 
-def convert_music_xml_to_midi(file_path: str, output_directory: str) -> str:
+def convert_with_musescore(file_path: str, output_directory: str) -> str:
     # Must be 'mid' not "midi" to work with Musescore
     converted_file_path = output_directory + '/temp.mid'
     print("\nConverting to midi")
