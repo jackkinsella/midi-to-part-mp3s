@@ -176,7 +176,7 @@ class Splitter:
         combine_audio_files(input_files, output_file_path)
 
     def __generate_accompaniment(self, own_part, solo_parts) -> None:
-        accompaniment_volume_ratio = self.config["accompaniment_volume_ratio"]
+        accompaniment_volume_ratio = self.config["accompaniment_volume_ratio"] * (4/len(solo_parts))
         instrumental_volume_ratio = (accompaniment_volume_ratio *
                                      self.config["instrumental_volume"])
         input_volumes = []
