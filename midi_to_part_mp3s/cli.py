@@ -18,7 +18,7 @@ def help_string_for_voice(voice: VoiceStringsType):
         default = default_config["voices"][voice][0]
     else:
         default = "'disabled voice'"
-    return f'comma separated list of midi track IDs, defaults to "{default}"'
+    return f'comma separated list of midi track IDs, defaults to "{default}". -1 to skip track'
 
 
 def str2bool(v):

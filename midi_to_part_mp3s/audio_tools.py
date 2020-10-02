@@ -1,6 +1,7 @@
 import os
 import re
 import subprocess
+from shutil import copyfile
 
 import sox
 
@@ -16,12 +17,16 @@ def compress_audio_dynamic_range(input_file_path, gain_db):
 
 
 def combine_audio_files(input_files, output_file_path, input_volumes=None):
-    combiner = sox.Combiner()
-    combiner.set_input_format(["wav"] * len(input_files))
-    gain_to_avoid_clipping = -3.0
-    combiner.gain(gain_to_avoid_clipping)
-
-    combiner.build(input_files, output_file_path, 'mix', input_volumes)
+    if len(input_files) > 1:
+        combiner = sox.Combiner()
+        combiner.set_input_format(["wav"] * len(input_files))
+        gain_to_avoid_clipping = -3.0
+        combiner.gain(gain_to_avoid_clipping)
+        combiner.build(input_files, output_file_path, 'mix', input_volumes)
+    # single files cannot be combined by sox
+    else:
+        only_file = input_files[0]
+        copyfile(only_file, output_file_path)
 
 
 def convert_midi_to_wav(midifile_path: str, soundfont_path: str) -> str:

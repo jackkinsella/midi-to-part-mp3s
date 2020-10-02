@@ -66,7 +66,7 @@ class Splitter:
             for part in solo_parts:
                 self.__generate_all_but_one_part_track(part, solo_parts)
 
-        if self.config["generate_accompaniment_tracks"]:
+        if self.config["generate_accompaniment_tracks"] and len(solo_parts) > 1:
             for part in solo_parts:
                 self.__generate_accompaniment(part, solo_parts)
 
@@ -94,7 +94,7 @@ class Splitter:
         sung_part: VoiceStringsType
         for sung_part in sung_parts:
             voice_midi_tracks = self.config["voices"][sung_part]
-            if (voice_midi_tracks):
+            if (voice_midi_tracks) and not (voice_midi_tracks == [-1]):
                 for i in range(len(voice_midi_tracks)):
                     tracks = []
                     track_id = voice_midi_tracks[i]
@@ -102,7 +102,7 @@ class Splitter:
                     tracks.append(track_id)
                     instrument = self.config["instrument"]
                     name = sung_part if i == 0 else sung_part + \
-                        ' ' + str(i + 1)
+                            ' ' + str(i + 1)
                     voice = [name, tracks, instrument]
                     voices.append(voice)
         self.__log(f"Voices generated {voices}")
