@@ -9,6 +9,7 @@ def number_of_voices_in_channel(track: mido.MidiTrack):
     longest_run_simultaneous = 1
     current_run = 1
     for message in (list(note_on_messages_with_velocity))[1:]:
+        # print(message)
         if message.time == 0:
             current_run+=1
             if current_run > longest_run_simultaneous:
