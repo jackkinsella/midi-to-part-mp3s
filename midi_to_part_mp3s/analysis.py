@@ -1,10 +1,31 @@
 import mido
 
+def number_of_voices_in_channel(track: mido.MidiTrack):
+    note_on_messages_with_velocity = filter(
+        lambda message: message.type == "note_on" and message.velocity > 0
+        ,track
+        )
+    # ignore first element since starts at time 0 naturally often
+    longest_run_simultaneous = 1
+    current_run = 1
+    for message in (list(note_on_messages_with_velocity))[1:]:
+        if message.time == 0:
+            current_run+=1
+            if current_run > longest_run_simultaneous:
+                longest_run_simultaneous = current_run
+        else:
+            current_run = 0
+
+    return longest_run_simultaneous
+
+
 
 def analyze(midi: mido.MidiFile, log_all_midi_messages=False) -> None:
     print("Analyzing midi file\n")
     print(f"BPM: {bpm(midi)}\n")
     print(f"Number of tracks: {number_of_tracks(midi)}\n")
+    for index, track in enumerate(midi.tracks):
+        print(f"Track {index}: {number_of_voices_in_channel(track)} voices")
     if is_split_by_channel(midi):
         print("Split by channel\n")
     else:
