@@ -7,7 +7,7 @@ soundfonts/*.sf2
 .mypy_cache
 
 # Python virtual environments
-mtp_venv/
+venv/
 
 # Python caching
 __pycache__
